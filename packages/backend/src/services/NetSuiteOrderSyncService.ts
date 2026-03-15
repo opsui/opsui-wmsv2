@@ -140,6 +140,33 @@ export class NetSuiteOrderSyncService {
     }, null);
   }
 
+  /**
+   * NetSuite's "Orders to Fulfill" queue is driven by the remaining committed
+   * quantity on the order, not just the ready-to-ship checkbox.
+   */
+  private getRemainingCommittedQuantity(line: NetSuiteSalesOrderLine): number {
+    const fulfilled = Number(line.quantityFulfilled || 0);
+    if (line.quantityCommitted == null) {
+      return Math.max(Number(line.quantity || 0) - fulfilled, 0);
+    }
+    const committed = Number(line.quantityCommitted || 0);
+    return Math.max(committed - fulfilled, 0);
+  }
+
+  private getQueueEligibleSalesOrderLines(
+    salesOrder: NetSuiteSalesOrder
+  ): NetSuiteSalesOrderLine[] {
+    return (salesOrder.item?.items || []).filter(
+      line => this.getRemainingCommittedQuantity(line) > 0
+    );
+  }
+
+  private isSalesOrderQueueEligible(salesOrder: NetSuiteSalesOrder): boolean {
+    return (
+      salesOrder.readyToShip === true && this.getQueueEligibleSalesOrderLines(salesOrder).length > 0
+    );
+  }
+
   private async mapWithConcurrency<T, R>(
     items: T[],
     concurrency: number,
@@ -534,7 +561,9 @@ export class NetSuiteOrderSyncService {
           for (const so of detailedPendingSalesOrders) {
             detailedPendingSalesOrdersById.set(so.id, so);
           }
-          allSalesOrders = detailedPendingSalesOrders.filter(so => so.readyToShip === true);
+          allSalesOrders = detailedPendingSalesOrders.filter(so =>
+            this.isSalesOrderQueueEligible(so)
+          );
           phase1FetchSucceeded = true;
           logger.info('Phase 1: Fetched pending sales orders from NetSuite', {
             count: allSalesOrders.length,
@@ -556,12 +585,12 @@ export class NetSuiteOrderSyncService {
 
       // Track all pending-fulfillment orders plus the subset that should remain in the WMS queue.
       const currentPendingSoIds = new Set<string>();
-      const currentReadyToShipSoIds = new Set<string>();
+      const currentQueueEligibleSoIds = new Set<string>();
       for (const so of pendingSalesOrderSummaries) {
         currentPendingSoIds.add(so.id);
       }
       for (const so of detailedPendingSalesOrders) {
-        if (so.readyToShip === true) currentReadyToShipSoIds.add(so.id);
+        if (this.isSalesOrderQueueEligible(so)) currentQueueEligibleSoIds.add(so.id);
       }
 
       result.totalProcessed = allSalesOrders.length;
@@ -664,7 +693,7 @@ export class NetSuiteOrderSyncService {
 
         for (const fulfillment of fulfillmentsForUpsert) {
           const soId = fulfillment.createdFrom?.id;
-          if (soId && currentReadyToShipSoIds.has(soId)) {
+          if (soId && currentQueueEligibleSoIds.has(soId)) {
             continue; // already handled via SO upsert
           }
           try {
@@ -864,7 +893,7 @@ export class NetSuiteOrderSyncService {
           }
 
           // No fulfillment found - check if SO is still pending in NetSuite
-          if (phase1Succeeded && currentReadyToShipSoIds.has(soId)) {
+          if (phase1Succeeded && currentQueueEligibleSoIds.has(soId)) {
             if (orderStatus === 'SHIPPED') {
               await this.updateOrderStatus(row.order_id, 'PENDING');
               await this.markOrderSynced(row.order_id, syncStartTime);
@@ -905,8 +934,29 @@ export class NetSuiteOrderSyncService {
               }
             }
 
-            if (pendingDetail.readyToShip === true) {
+            const pendingLines = pendingDetail.item?.items || [];
+            const hasFulfilledQuantity = pendingLines.some(
+              line => (line.quantityFulfilled || 0) > 0
+            );
+
+            if (this.isSalesOrderQueueEligible(pendingDetail)) {
               await this.markOrderSynced(row.order_id, syncStartTime);
+              continue;
+            }
+
+            if (hasFulfilledQuantity) {
+              await this.updateOrderStatus(row.order_id, 'PICKED');
+              await this.markOrderSynced(row.order_id, syncStartTime);
+              result.updated++;
+              result.details.updated.push(row.netsuite_so_tran_id || soId);
+              logger.warn(
+                'Updated order to PICKED using sales-order fulfilled quantities fallback',
+                {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  soId,
+                }
+              );
               continue;
             }
 
@@ -915,7 +965,7 @@ export class NetSuiteOrderSyncService {
             if (cancelled) {
               result.cleaned++;
               result.details.cleaned.push(row.netsuite_so_tran_id || soId);
-              logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
+              logger.info('Cancelled order (SO pending fulfillment but no longer queue-eligible)', {
                 orderId: row.order_id,
                 soTranId: row.netsuite_so_tran_id,
                 soId,
@@ -935,22 +985,6 @@ export class NetSuiteOrderSyncService {
             const hasFulfilledQuantity = soLines.some(line => (line.quantityFulfilled || 0) > 0);
 
             if (soStatus.includes('pending fulfillment')) {
-              if (soDetail.readyToShip === false) {
-                const cancelled = await this.cancelOrderIfCurrentStatus(row.order_id, row.status);
-                await this.markOrderSynced(row.order_id, syncStartTime);
-                if (cancelled) {
-                  result.cleaned++;
-                  result.details.cleaned.push(row.netsuite_so_tran_id || soId);
-                  logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
-                    orderId: row.order_id,
-                    soTranId: row.netsuite_so_tran_id,
-                    soId,
-                    previousStatus: row.status,
-                  });
-                }
-                continue;
-              }
-
               if (hasFulfilledQuantity) {
                 await this.updateOrderStatus(row.order_id, 'PICKED');
                 await this.markOrderSynced(row.order_id, syncStartTime);
@@ -965,6 +999,25 @@ export class NetSuiteOrderSyncService {
                     soStatus,
                   }
                 );
+                continue;
+              }
+
+              if (!this.isSalesOrderQueueEligible(soDetail)) {
+                const cancelled = await this.cancelOrderIfCurrentStatus(row.order_id, row.status);
+                await this.markOrderSynced(row.order_id, syncStartTime);
+                if (cancelled) {
+                  result.cleaned++;
+                  result.details.cleaned.push(row.netsuite_so_tran_id || soId);
+                  logger.info(
+                    'Cancelled order (SO pending fulfillment but no longer queue-eligible)',
+                    {
+                      orderId: row.order_id,
+                      soTranId: row.netsuite_so_tran_id,
+                      soId,
+                      previousStatus: row.status,
+                    }
+                  );
+                }
                 continue;
               }
 
@@ -1235,7 +1288,8 @@ export class NetSuiteOrderSyncService {
                   soStatus.includes('billed');
                 isNotReadyToShip = soDetail.readyToShip === false;
                 isPendingReadyToShip =
-                  soStatus.includes('pending fulfillment') && soDetail.readyToShip === true;
+                  soStatus.includes('pending fulfillment') &&
+                  this.isSalesOrderQueueEligible(soDetail);
               } catch (error: any) {
                 logger.debug(
                   'Could not fetch SO status for packing queue order without fulfillment',
@@ -1641,10 +1695,12 @@ export class NetSuiteOrderSyncService {
     const soTranId = salesOrder.tranId;
     const parentSalesOrder = salesOrder;
     const customerName = salesOrder.entity?.refName || 'Unknown Customer';
+    const allLineItems = salesOrder.item?.items || [];
+    const lineItems = this.getQueueEligibleSalesOrderLines(salesOrder);
+    const isQueueEligible = this.isSalesOrderQueueEligible(salesOrder);
 
     // Check line items
-    const lineItems = salesOrder.item?.items || [];
-    if (lineItems.length === 0) {
+    if (allLineItems.length === 0) {
       return { created: false, updated: false, skipped: true, reason: 'No line items', tranId };
     }
 
@@ -1652,6 +1708,17 @@ export class NetSuiteOrderSyncService {
     if (!salesOrder.readyToShip) {
       logger.debug('Sales order skipped — readyToShip is false', { tranId });
       return { created: false, updated: false, skipped: true, reason: 'Not ready to ship', tranId };
+    }
+
+    if (!isQueueEligible) {
+      logger.debug('Sales order skipped - no committed fulfillable lines remain', { tranId });
+      return {
+        created: false,
+        updated: false,
+        skipped: true,
+        reason: 'No committed fulfillable lines',
+        tranId,
+      };
     }
 
     if (isExcludedQueueCustomerName(customerName)) {
@@ -1755,7 +1822,7 @@ export class NetSuiteOrderSyncService {
         });
       } else if (
         ['PICKED', 'PACKED', 'CANCELLED'].includes(existing.status) &&
-        salesOrder.readyToShip &&
+        isQueueEligible &&
         !hasFulfillment &&
         (salesOrder.status?.refName || '').toLowerCase().includes('pending fulfillment')
       ) {
@@ -2679,12 +2746,13 @@ export class NetSuiteOrderSyncService {
     syncStartTime: Date,
     fulfillment?: any
   ) {
-    const lineItems = salesOrder.item?.items || [];
+    const allLineItems = salesOrder.item?.items || [];
+    const lineItems = this.getQueueEligibleSalesOrderLines(salesOrder);
     const orderId = salesOrder.tranId; // Use NetSuite SO number as order_id
     const priority = this.calculatePriority(salesOrder.shipDate);
 
     // Calculate order total from line items (fallback to NetSuite totals if missing)
-    let subtotal = lineItems.reduce((sum, line) => {
+    let subtotal = allLineItems.reduce((sum, line) => {
       return sum + (line.amount || (line.rate || 0) * (line.quantity || 1));
     }, 0);
     if ((subtotal === 0 || Number.isNaN(subtotal)) && salesOrder.subTotal != null) {
@@ -2764,8 +2832,10 @@ export class NetSuiteOrderSyncService {
       );
       const binLocation = skuResult.rows[0]?.bin_location || 'UNASSIGNED';
 
-      // Use quantityCommitted if available (what's actually reserved), fallback to quantity
-      const itemQuantity = line.quantityCommitted || line.quantity || 1;
+      const itemQuantity = this.getRemainingCommittedQuantity(line);
+      if (itemQuantity <= 0) {
+        continue;
+      }
 
       await this.query(
         `INSERT INTO order_items (
@@ -2787,7 +2857,11 @@ export class NetSuiteOrderSyncService {
     }
 
     // Store external reference (legacy compat)
-    await this.storeExternalOrderId(orderId, fulfillment.tranId || fulfillment.id, fulfillment.id);
+    await this.storeExternalOrderId(
+      orderId,
+      fulfillment?.tranId || salesOrder.tranId,
+      fulfillment?.id || soInternalId
+    );
 
     return { orderId };
   }
@@ -3080,15 +3154,26 @@ export class NetSuiteOrderSyncService {
       await this.query(
         `UPDATE order_items
          SET name = COALESCE(NULLIF(name, ''), $1::varchar),
-             netsuite_available_quantity = $2::numeric,
+             quantity = CASE
+               WHEN COALESCE(picked_quantity, 0) = 0 THEN $2::numeric
+               ELSE quantity
+             END,
+             netsuite_available_quantity = $3::numeric,
              bin_location = CASE
                WHEN (bin_location IS NULL OR bin_location = '' OR bin_location = 'UNASSIGNED')
-                    AND $3::varchar IS NOT NULL AND $3::varchar <> '' THEN $3::varchar
+                    AND $4::varchar IS NOT NULL AND $4::varchar <> '' THEN $4::varchar
                ELSE bin_location
              END
-         WHERE order_id = $4
-           AND sku = $5`,
-        [itemName, line.quantityAvailable ?? null, binLocation, orderId, skuCode]
+         WHERE order_id = $5
+           AND sku = $6`,
+        [
+          itemName,
+          this.getRemainingCommittedQuantity(line),
+          line.quantityAvailable ?? null,
+          binLocation,
+          orderId,
+          skuCode,
+        ]
       );
 
       await this.query(
@@ -3324,7 +3409,7 @@ export class NetSuiteOrderSyncService {
 
       const netSuitePendingIds = new Set<string>();
       for (const so of soResponse.items || []) {
-        if ((so as any).readyToShip) {
+        if (this.isSalesOrderQueueEligible(so as NetSuiteSalesOrder)) {
           netSuitePendingIds.add((so as any).id);
         }
       }

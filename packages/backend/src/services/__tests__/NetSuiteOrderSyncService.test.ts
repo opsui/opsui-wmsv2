@@ -448,6 +448,107 @@ describe('NetSuiteOrderSyncService', () => {
     expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68563', expect.any(Date));
   });
 
+  it('skips ready-to-ship orders when NetSuite has no committed lines left to fulfill', async () => {
+    const { service } = createService();
+
+    const result = await (service as any).upsertFromSalesOrder(
+      baseSalesOrder({
+        id: '1563837',
+        tranId: 'SO67128',
+        item: {
+          items: [
+            {
+              item: { id: 'sku-1', refName: 'SKU-1' },
+              quantity: 20,
+              quantityCommitted: 0,
+              quantityFulfilled: 0,
+              line: 1,
+            },
+          ],
+        },
+      }),
+      new Map(),
+      new Date('2026-03-16T00:00:00.000Z'),
+      {}
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        created: false,
+        updated: false,
+        skipped: true,
+        reason: 'No committed fulfillable lines',
+        tranId: 'SO67128',
+      })
+    );
+  });
+
+  it('cancels pending orders when NetSuite leaves readyToShip on but removes all committed quantity', async () => {
+    const { client, service } = createService();
+    const cancelSpy = jest
+      .spyOn(service as any, 'cancelOrderIfCurrentStatus')
+      .mockResolvedValue(true);
+
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
+        return {
+          rows: [
+            {
+              order_id: 'SO67128',
+              status: 'PENDING',
+              netsuite_so_internal_id: '1563837',
+              netsuite_so_tran_id: 'SO67128',
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+
+      return { rows: [], rowCount: 0 };
+    });
+
+    const noCommitSalesOrder = baseSalesOrder({
+      id: '1563837',
+      tranId: 'SO67128',
+      item: {
+        items: [
+          {
+            item: { id: 'sku-1', refName: 'SKU-1' },
+            quantity: 20,
+            quantityCommitted: 0,
+            quantityFulfilled: 0,
+            line: 1,
+          },
+        ],
+      },
+    });
+
+    jest.spyOn(client, 'getSalesOrders').mockResolvedValue({
+      links: [],
+      count: 1,
+      hasMore: false,
+      items: [noCommitSalesOrder as any],
+      offset: 0,
+      totalResults: 1,
+    });
+    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(noCommitSalesOrder);
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'full' });
+
+    expect(result.cleaned).toBe(1);
+    expect(cancelSpy).toHaveBeenCalledWith('SO67128', 'PENDING');
+    expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO67128', expect.any(Date));
+  });
+
   it('updates an existing fulfillment-backed order', async () => {
     const { client, service } = createService();
 
@@ -943,14 +1044,77 @@ describe('NetSuiteOrderSyncService', () => {
     );
 
     expect(queryMock).toHaveBeenCalledWith(
-      expect.stringContaining('netsuite_available_quantity = $2'),
-      ['INFINITY GARAGE', 251, 'I1A', 'SO68539', 'INFINITY GARAGE']
+      expect.stringContaining('netsuite_available_quantity = $3'),
+      ['INFINITY GARAGE', 1, 251, 'I1A', 'SO68539', 'INFINITY GARAGE']
     );
     expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('UPDATE pick_tasks'), [
       'INFINITY GARAGE',
       'I1A',
       'SO68539',
       'INFINITY GARAGE',
+    ]);
+  });
+
+  it('creates pending WMS lines from remaining committed quantity only', async () => {
+    const { service } = createService();
+    const queryMock = jest.spyOn(service as any, 'query').mockImplementation(async () => ({
+      rows: [],
+      rowCount: 0,
+    }));
+
+    jest
+      .spyOn(service as any, 'findSkuByNetSuiteItem')
+      .mockImplementation(
+        async (_id: string | undefined, name: string | undefined) => name || null
+      );
+    jest.spyOn(service as any, 'getItemDetails').mockResolvedValue(null);
+    jest.spyOn(service as any, 'ensureSku').mockResolvedValue(undefined);
+
+    await (service as any).createWMSOrder(
+      baseSalesOrder({
+        id: '1700020',
+        tranId: 'SO70020',
+        item: {
+          items: [
+            {
+              item: { id: 'sku-1', refName: 'SKU-1' },
+              quantity: 5,
+              quantityCommitted: 2,
+              quantityFulfilled: 1,
+              rate: 10,
+              line: 1,
+            },
+            {
+              item: { id: 'sku-2', refName: 'SKU-2' },
+              quantity: 3,
+              quantityCommitted: 0,
+              quantityFulfilled: 0,
+              rate: 5,
+              line: 2,
+            },
+          ],
+        },
+      }),
+      '1700020',
+      'PENDING',
+      new Date('2026-03-16T00:00:00.000Z')
+    );
+
+    const lineInsertCalls = queryMock.mock.calls.filter(([sql]) =>
+      String(sql).includes('INSERT INTO order_items')
+    );
+
+    expect(lineInsertCalls).toHaveLength(1);
+    expect(lineInsertCalls[0][1]).toEqual([
+      'OI-SO70020-0',
+      'SO70020',
+      'SKU-1',
+      'SKU-1',
+      1,
+      'UNASSIGNED',
+      10,
+      10,
+      null,
     ]);
   });
 
