@@ -266,7 +266,6 @@ export default {
     apiKey: getEnv('NZC_API_KEY', ''),
     siteId: getEnv('NZC_SITE_ID', ''),
     supportEmail: getEnv('NZC_SUPPORT_EMAIL', ''),
-    trackingApiKey: getEnv('NZC_TRACKING_API_KEY', ''),
   },
 
   // Email Provider Configuration
