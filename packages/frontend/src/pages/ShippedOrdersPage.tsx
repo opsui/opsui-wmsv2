@@ -15,25 +15,28 @@
  * ============================================================================
  */
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   TruckIcon,
   DocumentArrowDownIcon,
+  DocumentTextIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
   ArrowRightIcon,
   ChevronRightIcon,
-  CalendarIcon,
+  ChevronDownIcon,
+  PrinterIcon,
   MapPinIcon,
   CubeIcon,
+  TagIcon,
 } from '@heroicons/react/24/outline';
-import { Header, Button, Badge, Breadcrumb } from '@/components/shared';
+import { useQuery } from '@tanstack/react-query';
+import { Header, Breadcrumb, useToast } from '@/components/shared';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
-import { useShippedOrders, useNZCTracking } from '@/services/api';
+import { nzcApi, orderApi, useShippedOrders, useNZCTracking } from '@/services/api';
+import type { NZCLabelResponse, Order } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
@@ -46,7 +49,7 @@ interface ShippedOrder {
   carrier: string;
   trackingNumber: string;
   shippedAt: string;
-  estimatedDelivery: string;
+  estimatedDelivery: string | null;
   status: 'in_transit' | 'out_for_delivery' | 'delivered' | 'exception';
   itemCount: number;
   items: Array<{ sku: string; name: string; quantity: number; image?: string }>;
@@ -137,7 +140,7 @@ export function ShippedOrdersPage() {
       carrier: o.carrier || 'Unknown',
       trackingNumber: o.trackingNumber || '—',
       shippedAt: o.shippedAt,
-      estimatedDelivery: o.deliveredAt || o.shippedAt,
+      estimatedDelivery: o.deliveredAt || (o as any).estimatedDeliveryDate || null,
       status: (o.deliveredAt ? 'delivered' : 'in_transit') as ShippedOrder['status'],
       itemCount: o.itemCount,
       items: (o as any).items ?? [],
@@ -421,7 +424,7 @@ export function ShippedOrdersPage() {
                           {order.status === 'delivered' ? 'Delivered' : 'Est. Delivery'}
                         </span>
                         <span className="shipping-timeline-time">
-                          {formatDate(order.estimatedDelivery)}
+                          {order.estimatedDelivery ? formatDate(order.estimatedDelivery) : '—'}
                         </span>
                       </div>
                     </div>
