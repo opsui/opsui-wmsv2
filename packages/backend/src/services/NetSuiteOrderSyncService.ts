@@ -1778,6 +1778,7 @@ export class NetSuiteOrderSyncService {
         const derivedTotal =
           parentSalesOrder.total != null ? parentSalesOrder.total : derivedSubtotal;
         const shippingAddress = this.buildWmsShippingAddress(parentSalesOrder.shippingAddress);
+        const billingAddress = this.buildWmsShippingAddress(parentSalesOrder.billingAddress);
         try {
           await this.query(
             `UPDATE orders
@@ -1788,6 +1789,10 @@ export class NetSuiteOrderSyncService {
                  shipping_address = CASE
                    WHEN $6::jsonb IS NOT NULL THEN $6::jsonb
                    ELSE shipping_address
+                 END,
+                 billing_address = CASE
+                   WHEN $7::jsonb IS NOT NULL THEN $7::jsonb
+                   ELSE billing_address
                  END
              WHERE order_id = $3`,
             [
@@ -1797,6 +1802,7 @@ export class NetSuiteOrderSyncService {
               parentSalesOrder.otherRefNum || null,
               parentSalesOrder.tranDate || null,
               shippingAddress ? JSON.stringify(shippingAddress) : null,
+              billingAddress ? JSON.stringify(billingAddress) : null,
             ]
           );
         } catch {
@@ -2766,11 +2772,12 @@ export class NetSuiteOrderSyncService {
           : subtotal;
 
     const shippingAddress = this.buildWmsShippingAddress(salesOrder.shippingAddress);
+    const billingAddress = this.buildWmsShippingAddress(salesOrder.billingAddress);
 
     await this.query(
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
-        shipping_address, customer_email, organization_id, customer_po_number, netsuite_order_date,
+        shipping_address, billing_address, customer_email, organization_id, customer_po_number, netsuite_order_date,
         subtotal, total_amount,
         netsuite_so_internal_id, netsuite_so_tran_id,
         netsuite_if_internal_id, netsuite_if_tran_id,
@@ -2778,11 +2785,11 @@ export class NetSuiteOrderSyncService {
         picked_at, shipped_at, packed_at,
         created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5::order_status, $6, $7, $8, $9, $10, $11,
-        $12, $13,
-        $14, $15, $16, $17,
-        'NETSUITE', $18,
-        $19, $20, $21,
+        $1, $2, $3, $4, $5::order_status, $6, $7, $8, $9, $10, $11, $12,
+        $13, $14,
+        $15, $16, $17, $18,
+        'NETSUITE', $19,
+        $20, $21, $22,
         NOW(), NOW()
       )`,
       [
@@ -2793,6 +2800,7 @@ export class NetSuiteOrderSyncService {
         targetStatus,
         targetStatus === 'PENDING' ? 0 : 100,
         shippingAddress ? JSON.stringify(shippingAddress) : null,
+        billingAddress ? JSON.stringify(billingAddress) : null,
         `netsuite:${salesOrder.tranId}`,
         this.organizationId,
         salesOrder.otherRefNum || null,

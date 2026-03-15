@@ -242,7 +242,9 @@ export interface Order {
     cancelledAt?: Date;
     items?: OrderItem[];
     pickerId?: string;
+    pickerName?: string;
     packerId?: string;
+    packerName?: string;
     progress: number;
     netsuiteSoTranId?: string;
     netsuiteSoInternalId?: string;
@@ -257,6 +259,7 @@ export interface Order {
     totalAmount?: number;
     currency?: string;
     shippingAddress?: Address;
+    billingAddress?: Address;
     carrier?: string;
     trackingNumber?: string;
 }
@@ -271,6 +274,8 @@ export interface OrderItem {
     orderId: string;
     sku: string;
     name: string;
+    itemName?: string;
+    description?: string;
     quantity: number;
     pickedQuantity: number;
     verifiedQuantity?: number;
@@ -371,6 +376,7 @@ export interface PickTask {
 export interface User {
     userId: string;
     entityId?: string | null;
+    defaultOrganizationId?: string | null;
     name: string;
     email: string;
     role: UserRole;

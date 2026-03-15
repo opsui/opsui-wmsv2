@@ -49,6 +49,18 @@ export interface NetSuiteSalesOrder {
     email?: string;
     country?: { id: string; refName: string };
   };
+  billingAddress?: {
+    addressee?: string;
+    attention?: string;
+    addr1?: string;
+    addr2?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    phone?: string;
+    email?: string;
+    country?: { id: string; refName: string };
+  };
 }
 
 export interface NetSuiteSalesOrderLine {
@@ -459,6 +471,11 @@ export class NetSuiteClient {
       this.extractTag(recordXml, 'shippingAddress') || this.extractTag(recordXml, 'shipAddress');
     const shippingAddress = this.parseShippingAddress(shippingBlock);
 
+    // Billing address
+    const billingBlock =
+      this.extractTag(recordXml, 'billingAddress') || this.extractTag(recordXml, 'billAddress');
+    const billingAddress = this.parseShippingAddress(billingBlock);
+
     // Line items
     const items = this.parseLineItems(recordXml);
 
@@ -482,6 +499,7 @@ export class NetSuiteClient {
       taxTotal,
       item: items.length > 0 ? { items } : undefined,
       shippingAddress,
+      billingAddress,
     };
   }
 
@@ -619,6 +637,9 @@ export class NetSuiteClient {
       const shippingBlock =
         this.extractTag(recordXml, 'shippingAddress') || this.extractTag(recordXml, 'shipAddress');
       const shippingAddress = this.parseShippingAddress(shippingBlock);
+      const billingBlock =
+        this.extractTag(recordXml, 'billingAddress') || this.extractTag(recordXml, 'billAddress');
+      const billingAddress = this.parseShippingAddress(billingBlock);
 
       return {
         links: [],
@@ -633,6 +654,7 @@ export class NetSuiteClient {
           : undefined,
         item: lineItems.length > 0 ? { items: lineItems } : undefined,
         shippingAddress,
+        billingAddress,
       };
     });
   }
@@ -1023,6 +1045,11 @@ export class NetSuiteClient {
       this.extractTag(response, 'shippingAddress') || this.extractTag(response, 'shipAddress');
     const shippingAddress = this.parseShippingAddress(shippingBlock);
 
+    // Billing address
+    const billingBlock =
+      this.extractTag(response, 'billingAddress') || this.extractTag(response, 'billAddress');
+    const billingAddress = this.parseShippingAddress(billingBlock);
+
     // Line items
     const lineItems = this.parseLineItems(response);
 
@@ -1046,6 +1073,7 @@ export class NetSuiteClient {
       createdFrom: { id: createdFromId, refName: createdFromName.replace(/<[^>]*>/g, '').trim() },
       item: lineItems.length > 0 ? { items: lineItems } : lineItems,
       shippingAddress,
+      billingAddress,
     };
   }
 

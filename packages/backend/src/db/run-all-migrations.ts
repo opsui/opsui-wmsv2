@@ -100,6 +100,14 @@ const ALL_MIGRATIONS = [
     file: '105_add_order_customer_po_and_nzc_carrier.sql',
     name: '105_add_order_customer_po_and_nzc_carrier',
   },
+  {
+    file: '106_add_netsuite_order_date.sql',
+    name: '106_add_netsuite_order_date',
+  },
+  {
+    file: '107_add_billing_address_to_orders.sql',
+    name: '107_add_billing_address_to_orders',
+  },
 ];
 
 const isDryRun = process.argv.includes('--dry-run');

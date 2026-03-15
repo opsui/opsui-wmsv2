@@ -565,6 +565,7 @@ export interface Order {
   currency?: string; // Currency code for the order
   // Shipping fields (populated when order is SHIPPED)
   shippingAddress?: Address;
+  billingAddress?: Address;
   carrier?: string;
   trackingNumber?: string;
 }

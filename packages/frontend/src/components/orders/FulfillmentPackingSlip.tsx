@@ -260,15 +260,16 @@ const formatFulfillmentActorTimestamp = (value?: string | Date | null) => {
 
 const formatAddressLines = (address?: Address | null): AddressLine[] => {
   if (!address) return [];
+  const a = address as any;
   const lines: { label: string; value: string | undefined | null }[] = [
-    { label: 'Name', value: address.name },
-    { label: 'Company', value: address.company },
-    { label: 'Address', value: address.addressLine1 },
-    { label: '', value: address.addressLine2 },
-    { label: 'City', value: address.city },
-    { label: 'State', value: address.state },
-    { label: 'Postal Code', value: address.postalCode },
-    { label: 'Country', value: formatNetSuiteDisplayText(address.country) },
+    { label: 'Name', value: a.name },
+    { label: 'Company', value: a.company },
+    { label: 'Address', value: a.addressLine1 || a.street1 },
+    { label: '', value: a.addressLine2 || a.street2 },
+    { label: 'City', value: a.city },
+    { label: 'State', value: a.state },
+    { label: 'Postal Code', value: a.postalCode },
+    { label: 'Country', value: formatNetSuiteDisplayText(a.country) },
   ];
   return lines
     .map(line => ({
@@ -512,7 +513,7 @@ export function FulfillmentPackingSlip({
     shippingMethod?: string | null;
   };
   const previewAddressLines = formatAddressLines(order.shippingAddress);
-  const billToLines = previewAddressLines;
+  const billToLines = formatAddressLines(order.billingAddress || order.shippingAddress);
   const orderDate = extendedOrder.netsuiteOrderDate
     ? new Date(extendedOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
     : new Date().toLocaleDateString('en-NZ');
