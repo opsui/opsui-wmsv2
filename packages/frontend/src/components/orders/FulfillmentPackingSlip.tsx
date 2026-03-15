@@ -893,13 +893,31 @@ export async function printFulfillmentSlipElement(
     doc.close();
 
     iframe.onload = () => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      window.setTimeout(() => {
-        if (iframe.parentNode) {
-          iframe.parentNode.removeChild(iframe);
-        }
-      }, 3000);
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      const images = Array.from(iframeDoc?.querySelectorAll('img') ?? []) as HTMLImageElement[];
+      const pending = images.filter(img => !img.complete);
+
+      const doPrint = () => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        window.setTimeout(() => {
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        }, 3000);
+      };
+
+      if (pending.length === 0) {
+        doPrint();
+      } else {
+        let remaining = pending.length;
+        const onSettle = () => {
+          remaining -= 1;
+          if (remaining === 0) doPrint();
+        };
+        pending.forEach(img => {
+          img.onload = onSettle;
+          img.onerror = onSettle;
+        });
+      }
     };
   } catch (error) {
     if (iframe.parentNode) {
