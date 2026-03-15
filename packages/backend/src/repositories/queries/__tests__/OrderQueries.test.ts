@@ -32,4 +32,20 @@ describe('OrderQueries.mapOrderItem', () => {
 
     expect(item.onHandQuantity).toBe(120.5);
   });
+
+  it('preserves skip reasons from joined picking data for downstream packing views', () => {
+    const item = mapOrderItem({
+      order_item_id: 'ITEM-3',
+      order_id: 'ORD-3',
+      sku: 'SKU-3',
+      name: 'Test Item 3',
+      quantity: 1,
+      picked_quantity: 0,
+      verified_quantity: 0,
+      status: 'PENDING',
+      skip_reason: 'Backordered remainder',
+    });
+
+    expect(item.skipReason).toBe('Backordered remainder');
+  });
 });

@@ -72,10 +72,12 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
     oi.picked_quantity,
     COALESCE(oi.verified_quantity, 0) as verified_quantity,
     oi.status,
+    COALESCE(NULLIF(TRIM(oi.skip_reason), ''), NULLIF(TRIM(pt.skip_reason), '')) as skip_reason,
     s.barcode,
     COALESCE(oi.unit_price, s.unit_price) as unit_price,
     COALESCE(oi.line_total, oi.quantity * s.unit_price) as line_total
   FROM order_items oi
+  LEFT JOIN pick_tasks pt ON pt.order_item_id = oi.order_item_id
   LEFT JOIN skus s ON oi.sku = s.sku
   WHERE oi.order_id = $1
   ORDER BY oi.order_item_id
@@ -136,6 +138,9 @@ export function mapOrderItem(row: any): any {
     typeof rawSkipReason === 'string'
       ? rawSkipReason.replace(/^TEMP_SKIP:\s*/i, '').trim()
       : rawSkipReason;
+  const rawOnHandQuantity = row.on_hand_quantity ?? row.onHandQuantity ?? 0;
+  const onHandQuantity =
+    typeof rawOnHandQuantity === 'string' ? parseFloat(rawOnHandQuantity) : rawOnHandQuantity;
 
   return {
     orderItemId: row.order_item_id || row.orderItemId,
@@ -152,7 +157,7 @@ export function mapOrderItem(row: any): any {
     skipReason,
     completedAt: row.completed_at || row.completedAt,
     barcode: row.barcode || null,
-    onHandQuantity: row.on_hand_quantity ?? row.onHandQuantity ?? 0,
+    onHandQuantity,
     unitPrice: row.unit_price != null ? parseFloat(row.unit_price) : (row.unitPrice ?? null),
     lineTotal: row.line_total != null ? parseFloat(row.line_total) : (row.lineTotal ?? null),
   };
