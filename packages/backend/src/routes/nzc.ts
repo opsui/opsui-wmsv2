@@ -15,6 +15,48 @@ const router = Router();
 // All NZC routes require authentication
 router.use(authenticate);
 
+// Handle tracking requests defensively from the live request path.
+// Production has been falling through Express route matching for this endpoint
+// even though sibling NZC routes are registered correctly.
+router.use(
+  asyncHandler(async (req: AuthenticatedRequest, res, next) => {
+    if (req.method !== 'GET') {
+      next();
+      return;
+    }
+
+    const localPath = String(req.path || '');
+    const originalPath = String(req.originalUrl || '');
+    const trackingPath = localPath.startsWith('/tracking/')
+      ? localPath
+      : originalPath.includes('/nzc/tracking/')
+        ? originalPath.slice(originalPath.indexOf('/nzc/tracking/') + '/nzc'.length)
+        : null;
+
+    if (!trackingPath?.startsWith('/tracking/')) {
+      next();
+      return;
+    }
+
+    if (!nzcService.isConfigured()) {
+      res.status(503).json({
+        error: 'NZC is not configured on this backend',
+        code: 'NZC_NOT_CONFIGURED',
+      });
+      return;
+    }
+
+    const connote = decodeURIComponent(trackingPath.slice('/tracking/'.length).split('?')[0] || '');
+    if (!connote) {
+      next();
+      return;
+    }
+
+    const result = await nzcService.getTracking(connote);
+    res.json(result);
+  })
+);
+
 // ============================================================================
 // RATE QUOTE ROUTES
 // ============================================================================
@@ -280,28 +322,6 @@ router.post(
  * GET /api/nzc/tracking/:connote
  * Get tracking status and events for a consignment
  */
-router.use(
-  '/tracking/:connote',
-  asyncHandler(async (req: AuthenticatedRequest, res, next) => {
-    if (req.method !== 'GET') {
-      next();
-      return;
-    }
-
-    if (!nzcService.isConfigured()) {
-      res.status(503).json({
-        error: 'NZC is not configured on this backend',
-        code: 'NZC_NOT_CONFIGURED',
-      });
-      return;
-    }
-
-    const { connote } = req.params;
-    const result = await nzcService.getTracking(connote);
-    res.json(result);
-  })
-);
-
 // ============================================================================
 // UTILITY ROUTES
 // ============================================================================
