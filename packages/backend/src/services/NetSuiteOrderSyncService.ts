@@ -910,22 +910,18 @@ export class NetSuiteOrderSyncService {
               continue;
             }
 
-            await this.query(
-              `UPDATE orders
-               SET status = 'CANCELLED'::order_status,
-                   cancelled_at = NOW(),
-                   updated_at = NOW()
-               WHERE order_id = $1 AND status = 'PENDING'`,
-              [row.order_id]
-            );
+            const cancelled = await this.cancelOrderIfCurrentStatus(row.order_id, row.status);
             await this.markOrderSynced(row.order_id, syncStartTime);
-            result.cleaned++;
-            result.details.cleaned.push(row.netsuite_so_tran_id || soId);
-            logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
-              orderId: row.order_id,
-              soTranId: row.netsuite_so_tran_id,
-              soId,
-            });
+            if (cancelled) {
+              result.cleaned++;
+              result.details.cleaned.push(row.netsuite_so_tran_id || soId);
+              logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
+                orderId: row.order_id,
+                soTranId: row.netsuite_so_tran_id,
+                soId,
+                previousStatus: row.status,
+              });
+            }
             continue;
           }
 
@@ -940,22 +936,18 @@ export class NetSuiteOrderSyncService {
 
             if (soStatus.includes('pending fulfillment')) {
               if (soDetail.readyToShip === false) {
-                await this.query(
-                  `UPDATE orders
-                   SET status = 'CANCELLED'::order_status,
-                       cancelled_at = NOW(),
-                       updated_at = NOW()
-                   WHERE order_id = $1 AND status = 'PENDING'`,
-                  [row.order_id]
-                );
+                const cancelled = await this.cancelOrderIfCurrentStatus(row.order_id, row.status);
                 await this.markOrderSynced(row.order_id, syncStartTime);
-                result.cleaned++;
-                result.details.cleaned.push(row.netsuite_so_tran_id || soId);
-                logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
-                  orderId: row.order_id,
-                  soTranId: row.netsuite_so_tran_id,
-                  soId,
-                });
+                if (cancelled) {
+                  result.cleaned++;
+                  result.details.cleaned.push(row.netsuite_so_tran_id || soId);
+                  logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    soId,
+                    previousStatus: row.status,
+                  });
+                }
                 continue;
               }
 
@@ -1017,18 +1009,17 @@ export class NetSuiteOrderSyncService {
               });
             } else if (soStatus.includes('cancelled')) {
               // SO was cancelled
-              await this.query(
-                `UPDATE orders SET status = 'CANCELLED'::order_status, cancelled_at = NOW(), updated_at = NOW()
-                 WHERE order_id = $1 AND status = 'PENDING'`,
-                [row.order_id]
-              );
+              const cancelled = await this.cancelOrderIfCurrentStatus(row.order_id, row.status);
               await this.markOrderSynced(row.order_id, syncStartTime);
-              result.cleaned++;
-              result.details.cleaned.push(row.netsuite_so_tran_id || soId);
-              logger.info('Cancelled order (SO cancelled on NetSuite)', {
-                orderId: row.order_id,
-                soTranId: row.netsuite_so_tran_id,
-              });
+              if (cancelled) {
+                result.cleaned++;
+                result.details.cleaned.push(row.netsuite_so_tran_id || soId);
+                logger.info('Cancelled order (SO cancelled on NetSuite)', {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  previousStatus: row.status,
+                });
+              }
             } else if (
               soStatus.includes('partially fulfilled') ||
               soStatus.includes('pending approval') ||
@@ -1072,19 +1063,18 @@ export class NetSuiteOrderSyncService {
             const errorMsg = error.message || '';
             if (errorMsg.includes('does not exist') || errorMsg.includes('not found')) {
               // Order was deleted from NetSuite - cancel it immediately
-              await this.query(
-                `UPDATE orders SET status = 'CANCELLED'::order_status, cancelled_at = NOW(), updated_at = NOW()
-                 WHERE order_id = $1 AND status IN ('PENDING', 'PICKING')`,
-                [row.order_id]
-              );
+              const cancelled = await this.cancelOrderIfCurrentStatus(row.order_id, row.status);
               await this.markOrderSynced(row.order_id, syncStartTime);
-              result.cleaned++;
-              result.details.cleaned.push(row.netsuite_so_tran_id || soId);
-              logger.info('Cancelled order - record deleted from NetSuite', {
-                orderId: row.order_id,
-                soTranId: row.netsuite_so_tran_id,
-                soId,
-              });
+              if (cancelled) {
+                result.cleaned++;
+                result.details.cleaned.push(row.netsuite_so_tran_id || soId);
+                logger.info('Cancelled order - record deleted from NetSuite', {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  soId,
+                  previousStatus: row.status,
+                });
+              }
             } else {
               // Other errors (timeout, etc.) - mark for cleanup
               logger.warn('Failed to check SO status for pending WMS order - marking for cleanup', {
@@ -2543,6 +2533,35 @@ export class NetSuiteOrderSyncService {
         newStatus,
       });
     }
+  }
+
+  private async cancelOrderIfCurrentStatus(
+    orderId: string,
+    currentStatus: string
+  ): Promise<boolean> {
+    const result = await this.query(
+      `UPDATE orders
+       SET status = 'CANCELLED'::order_status,
+           cancelled_at = NOW(),
+           updated_at = NOW(),
+           picker_id = NULL,
+           packer_id = NULL,
+           claimed_at = NULL
+       WHERE order_id = $1 AND status = $2
+       RETURNING order_id`,
+      [orderId, currentStatus]
+    );
+
+    if ((result.rowCount || 0) > 0) {
+      this.invalidateOrderLookupCaches();
+      return true;
+    }
+
+    logger.warn('Skipped cancellation because order status changed before cleanup write', {
+      orderId,
+      expectedStatus: currentStatus,
+    });
+    return false;
   }
 
   /**

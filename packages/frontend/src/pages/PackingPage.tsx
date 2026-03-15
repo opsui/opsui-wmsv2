@@ -34,13 +34,11 @@ import {
 } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
-  ArrowPathIcon,
   CheckIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   MinusCircleIcon,
   PrinterIcon,
-  ForwardIcon,
   PencilSquareIcon,
   WrenchScrewdriverIcon,
   XMarkIcon,
@@ -271,13 +269,6 @@ export function PackingPage() {
     {}
   );
 
-  // Skip modal state
-  const [showSkipModal, setShowSkipModal] = useState(false);
-  const [skipItemIndex, setSkipItemIndex] = useState<number | null>(null);
-  const [skipReason, setSkipReason] = useState('');
-  const [skipQuantity, setSkipQuantity] = useState(1);
-  const [isSkipping, setIsSkipping] = useState(false);
-
   // Exception modal state
   const [showExceptionModal, setShowExceptionModal] = useState(false);
   const [exceptionType, setExceptionType] = useState<ExceptionType>(ExceptionType.DAMAGE);
@@ -297,10 +288,6 @@ export function PackingPage() {
   const [isUnclaiming, setIsUnclaiming] = useState(false);
   const [undoLoading, setUndoLoading] = useState<Record<number, boolean>>({});
 
-  // Confirm dialog states
-  const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>(
-    { isOpen: false, index: -1, item: null }
-  );
   const [completeShipmentConfirm, setCompleteShipmentConfirm] = useState<{
     isOpen: boolean;
     skippedItems: any[];
@@ -791,6 +778,12 @@ export function PackingPage() {
     currentItem?.image ||
     (currentItem?.sku ? activeOrderItemImageMap[String(currentItem.sku)] : null) ||
     null;
+  const isItemSkipped = (
+    item: { status?: string; skipReason?: string | null } | null | undefined
+  ) =>
+    Boolean(
+      item && ((item.skipReason && item.skipReason.trim().length > 0) || item.status === 'SKIPPED')
+    );
 
   // Calculate progress
   const totalItems = order?.items?.length || 0;
@@ -873,7 +866,7 @@ export function PackingPage() {
   useEffect(() => {
     if (order && order.items && order.items.length > 0) {
       const firstIncompleteIndex = order.items.findIndex(
-        item => (item.verifiedQuantity || 0) < item.quantity && item.status !== 'SKIPPED'
+        item => (item.verifiedQuantity || 0) < item.quantity && !isItemSkipped(item)
       );
       if (firstIncompleteIndex !== -1 && firstIncompleteIndex !== currentItemIndex) {
         setCurrentItemIndex(firstIncompleteIndex);
@@ -1375,7 +1368,7 @@ export function PackingPage() {
     for (let i = 0; i < order.items.length; i++) {
       const item = order.items[i];
       const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
-      const isSkipped = item.status === 'SKIPPED';
+      const isSkipped = isItemSkipped(item);
 
       // Skip completed or skipped items
       if (isCompleted || isSkipped) continue;
@@ -1411,7 +1404,7 @@ export function PackingPage() {
           const matchesBarcode = item.barcode && scanValueTrimmed === item.barcode;
           const matchesSku = scanValueTrimmed === item.sku;
           if (matchesBarcode || matchesSku) {
-            if (item.status === 'SKIPPED') {
+            if (isItemSkipped(item)) {
               setScanError(
                 `Item was skipped: ${getOrderItemDisplayName(item)}. Revert the skip to verify it.`
               );
@@ -1526,7 +1519,7 @@ export function PackingPage() {
           (item: any, idx: number) =>
             idx > matchedIndex &&
             (item.verifiedQuantity || 0) < item.quantity &&
-            item.status !== 'SKIPPED'
+            !isItemSkipped(item)
         );
 
         if (nextIncompleteIndex !== -1) {
@@ -1553,57 +1546,6 @@ export function PackingPage() {
     setExceptionReason('');
     setExceptionQuantity(currentItem.verifiedQuantity || 0);
     setShowExceptionModal(true);
-  };
-
-  const handleSkipItem = (index: number) => {
-    const item = order?.items?.[index];
-    if (!item) return;
-
-    const remaining = item.quantity - (item.verifiedQuantity || 0);
-    setSkipQuantity(Math.max(1, remaining));
-    setSkipItemIndex(index);
-    setSkipReason('');
-    setShowSkipModal(true);
-  };
-
-  const handleConfirmSkip = async () => {
-    if (skipItemIndex === null || !order?.items?.[skipItemIndex]) return;
-
-    const item = order.items[skipItemIndex];
-    setIsSkipping(true);
-
-    try {
-      await logExceptionMutation.mutateAsync({
-        orderId: orderId!,
-        orderItemId: item.orderItemId,
-        sku: item.sku,
-        type: ExceptionType.SHORT_PICK_BACKORDER,
-        quantityExpected: item.quantity,
-        quantityActual: item.quantity - skipQuantity,
-        reason: skipReason || 'No reason provided',
-        reportedBy: currentUser?.userId || '',
-      });
-
-      await apiClient.post(`/orders/${orderId}/skip-packing-item`, {
-        order_item_id: item.orderItemId,
-        reason: skipReason || 'No reason provided',
-        skip_quantity: skipQuantity,
-      });
-
-      showToast('Item skipped and logged for backorder!', 'warning');
-      setShowShippingForm(false);
-      setShowSkipModal(false);
-      setSkipItemIndex(null);
-      setSkipReason('');
-      setSkipQuantity(1);
-
-      // Refetch order data
-      await refetch();
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to skip item', 'error');
-    } finally {
-      setIsSkipping(false);
-    }
   };
 
   const handleLogException = async () => {
@@ -1633,37 +1575,6 @@ export function PackingPage() {
       await refetch();
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to log exception', 'error');
-    }
-  };
-
-  const handleUnskipItem = async (index: number) => {
-    const item = order?.items?.[index];
-    if (!item) return;
-
-    setUnskipConfirm({ isOpen: true, index, item });
-  };
-
-  const confirmUnskipItem = async () => {
-    const { index, item } = unskipConfirm;
-    if (!item) return;
-
-    try {
-      await apiClient.put(`/orders/${orderId}/pick-task/${item.orderItemId}`, {
-        status: 'PENDING',
-      });
-
-      showToast('Skip reverted successfully!', 'success');
-      setUnskipConfirm({ isOpen: false, index: -1, item: null });
-
-      await refetch();
-
-      if ((item.verifiedQuantity || 0) < item.quantity) {
-        setCurrentItemIndex(index);
-        setScanValue('');
-        setScanError(null);
-      }
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to revert skip', 'error');
     }
   };
 
@@ -1807,7 +1718,7 @@ export function PackingPage() {
     }
 
     if (!skipConfirmCheck) {
-      const skippedItems = order?.items?.filter(item => item.status === 'SKIPPED');
+      const skippedItems = order?.items?.filter(item => isItemSkipped(item));
 
       if (skippedItems && skippedItems.length > 0) {
         setCompleteShipmentConfirm({ isOpen: true, skippedItems });
@@ -2986,7 +2897,7 @@ export function PackingPage() {
                     <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
                       {order.items?.map((item, index) => {
                         const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
-                        const isSkipped = item.status === 'SKIPPED';
+                        const isSkipped = isItemSkipped(item);
                         const isCurrent = index === currentItemIndex;
                         const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
 
@@ -3034,19 +2945,7 @@ export function PackingPage() {
                                     <CheckIcon className="h-4 w-4 text-success-400" />
                                   </div>
                                 )}
-                                {isSkipped && !isViewMode && (
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleUnskipItem(index);
-                                    }}
-                                    className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 hover:bg-warning-500/30 transition-colors touch-target"
-                                    title="Revert skip"
-                                  >
-                                    <ArrowPathIcon className="h-4 w-4" />
-                                  </button>
-                                )}
-                                {isSkipped && isViewMode && (
+                                {isSkipped && (
                                   <div className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center">
                                     <ExclamationTriangleIcon className="h-4 w-4 text-warning-400" />
                                   </div>
@@ -3110,18 +3009,6 @@ export function PackingPage() {
                               </p>
 
                               {/* Action buttons - only show for current/selected item */}
-                              {isCurrent && !isViewMode && !isCompleted && !isSkipped && (
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleSkipItem(index);
-                                  }}
-                                  className="text-warning-400 hover:text-warning-300 hover:bg-warning-500/10 p-1.5 rounded-lg transition-colors touch-target"
-                                  title="Skip this item"
-                                >
-                                  <ForwardIcon className="h-4 w-4" />
-                                </button>
-                              )}
                               {/* Manual override button - for admins/supervisors */}
                               {isCurrent &&
                                 !isViewMode &&
@@ -3235,156 +3122,6 @@ export function PackingPage() {
           isLoading={isUnclaiming}
         />
 
-        {/* Unskip Item Confirmation Dialog */}
-        <ConfirmDialog
-          isOpen={unskipConfirm.isOpen}
-          onClose={() => setUnskipConfirm({ isOpen: false, index: -1, item: null })}
-          onConfirm={confirmUnskipItem}
-          title="Revert Skip"
-          message={`Do you want to revert the skip for ${getOrderItemDisplayName(unskipConfirm.item)} (${unskipConfirm.item?.sku})?`}
-          confirmText="Revert"
-          cancelText="Cancel"
-          variant="success"
-        />
-
-        {/* Skip Item Modal */}
-        {showSkipModal && skipItemIndex !== null && order?.items?.[skipItemIndex] && (
-          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
-            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
-              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-6 py-4 rounded-t-2xl">
-                <div className="flex items-center justify-between">
-                  <h2 className="picking-title text-lg">Skip Item</h2>
-                  <button
-                    onClick={() => {
-                      setShowSkipModal(false);
-                      setSkipQuantity(1);
-                    }}
-                    className="text-white hover:text-warning-200 transition-colors"
-                  >
-                    <ExclamationTriangleIcon className="h-6 w-6" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div className={packingSurfacePanelClass}>
-                  <div className="flex items-start gap-4">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
-                      {order.items[skipItemIndex].image ||
-                      activeOrderItemImageMap[order.items[skipItemIndex].sku] ? (
-                        <img
-                          src={
-                            order.items[skipItemIndex].image ||
-                            activeOrderItemImageMap[order.items[skipItemIndex].sku]
-                          }
-                          alt={getOrderItemDisplayName(order.items[skipItemIndex])}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="picking-title text-gray-900 dark:text-white">
-                        {getOrderItemDisplayName(order.items[skipItemIndex])}
-                      </p>
-                      {getOrderItemDescription(order.items[skipItemIndex]) && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {getOrderItemDescription(order.items[skipItemIndex])}
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
-                        {order.items[skipItemIndex].sku}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
-                        {order.items[skipItemIndex].binLocation}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quantity to skip */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Quantity to skip (backorder)
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setSkipQuantity(q => Math.max(1, q - 1))}
-                      className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-gray-900 dark:text-white flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/[0.15] transition-colors border-gray-200 dark:border-white/[0.12]"
-                    >
-                      −
-                    </button>
-                    <span className="text-gray-900 dark:text-white font-bold text-lg w-12 text-center">
-                      {skipQuantity}
-                    </span>
-                    <button
-                      onClick={() => {
-                        const maxSkip =
-                          order.items[skipItemIndex].quantity -
-                          (order.items[skipItemIndex].verifiedQuantity || 0);
-                        setSkipQuantity(q => Math.min(maxSkip, q + 1));
-                      }}
-                      className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-gray-900 dark:text-white flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/[0.15] transition-colors border-gray-200 dark:border-white/[0.12]"
-                    >
-                      +
-                    </button>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      of{' '}
-                      {order.items[skipItemIndex].quantity -
-                        (order.items[skipItemIndex].verifiedQuantity || 0)}{' '}
-                      remaining units
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Reason for skipping <span className="text-error-400">*</span>
-                  </label>
-                  <textarea
-                    value={skipReason}
-                    onChange={e => setSkipReason(e.target.value)}
-                    rows={3}
-                    className={`${packingInputClass} focus:ring-warning-500 focus:border-warning-500`}
-                    placeholder="e.g., Item not found, Damaged, etc."
-                  />
-                </div>
-
-                <div className="p-4 bg-warning-500/10 border border-warning-500/30 rounded-xl">
-                  <p className="picking-subtitle text-warning-700 dark:text-warning-300 text-sm">
-                    <strong>Warning:</strong> Skipping this item will mark it as skipped. You can
-                    revert this later if needed.
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setShowSkipModal(false);
-                    setSkipQuantity(1);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="warning"
-                  onClick={handleConfirmSkip}
-                  isLoading={isSkipping}
-                  disabled={!skipReason.trim()}
-                >
-                  Skip Item
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Complete Shipment with Skipped Items Confirmation Dialog */}
         <ConfirmDialog
           isOpen={completeShipmentConfirm.isOpen}
@@ -3485,8 +3222,8 @@ export function PackingPage() {
 
                   <div className="rounded-xl border border-warning-500/30 bg-warning-500/10 p-4">
                     <p className="text-sm text-warning-800 dark:text-warning-200">
-                      Use this to log issues during packing. For actual backorders, keep using `Skip
-                      this item`.
+                      Use this to log issues during packing. Backorders should be handled outside
+                      the packing page.
                     </p>
                   </div>
                 </div>

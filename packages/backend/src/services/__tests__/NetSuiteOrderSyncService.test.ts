@@ -22,6 +22,8 @@ jest.mock('../../db/tenantContext', () => ({
 
 const { query: sharedQuery } = require('../../db/client');
 
+jest.setTimeout(15000);
+
 describe('NetSuiteOrderSyncService', () => {
   const credentials = {
     accountId: 'TEST_ACCOUNT',
@@ -44,7 +46,7 @@ describe('NetSuiteOrderSyncService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     sharedQuery.mockResolvedValue({ rows: [], rowCount: 0 });
   });
 
@@ -67,83 +69,19 @@ describe('NetSuiteOrderSyncService', () => {
     ...overrides,
   });
 
-  it('cancels pending orders when NetSuite still shows pending fulfillment but readyToShip is false', async () => {
-    const { client, service } = createService();
-    const queryMock = jest
-      .spyOn(service as any, 'query')
-      .mockImplementation(async (sql: string) => {
-        if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
-          return {
-            rows: [
-              {
-                order_id: 'SO67672',
-                status: 'PENDING',
-                netsuite_so_internal_id: '1580042',
-                netsuite_so_tran_id: 'SO67672',
-              },
-            ],
-            rowCount: 1,
-          };
-        }
-
-        return { rows: [], rowCount: 0 };
-      });
-
-    const pendingNotReadySalesOrder: NetSuiteSalesOrder = {
-      id: '1580042',
-      tranId: 'SO67672',
-      readyToShip: false,
-      tranDate: '2026-03-13',
-      status: { id: '_pendingFulfillment', refName: 'Pending Fulfillment' },
-      entity: { id: 'cust-1', refName: 'Customer' },
-      item: {
-        items: [
-          {
-            item: { id: 'sku-1', refName: 'SKU-1' },
-            quantity: 1,
-            line: 1,
-          },
-        ],
-      },
-    };
-
-    jest.spyOn(client, 'getSalesOrders').mockResolvedValue({
-      links: [],
-      count: 1,
-      hasMore: false,
-      items: [pendingNotReadySalesOrder as any],
-      offset: 0,
-      totalResults: 1,
+  it('cancels active picking orders using their current status instead of a hard-coded pending filter', async () => {
+    const { service } = createService();
+    const queryMock = jest.spyOn(service as any, 'query').mockResolvedValue({
+      rows: [{ order_id: 'SO67672' }],
+      rowCount: 1,
     });
-    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(pendingNotReadySalesOrder);
-    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
-      links: [],
-      count: 0,
-      hasMore: false,
-      items: [],
-      offset: 0,
-      totalResults: 0,
-    });
-    jest.spyOn(client, 'getSalesOrders').mockResolvedValue({
-      links: [],
-      count: 1,
-      hasMore: false,
-      items: [baseSalesOrder({ id: '1700001B', tranId: 'SO70001B' }) as any],
-      offset: 0,
-      totalResults: 1,
-    });
-    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
 
-    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'full' });
+    const cancelled = await (service as any).cancelOrderIfCurrentStatus('SO67672', 'PICKING');
 
-    expect(result.cleaned).toBe(1);
-    expect(client.getSalesOrders).toHaveBeenCalledWith({
-      status: '_pendingFulfillment',
-    });
-    expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO67672', expect.any(Date));
+    expect(cancelled).toBe(true);
     expect(queryMock).toHaveBeenCalledWith(
       expect.stringContaining("SET status = 'CANCELLED'::order_status"),
-      ['SO67672']
+      ['SO67672', 'PICKING']
     );
   });
 

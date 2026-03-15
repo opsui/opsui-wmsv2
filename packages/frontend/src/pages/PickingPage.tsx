@@ -35,15 +35,7 @@ import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
 import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
-import {
-  skuApi,
-  useClaimOrderForPacking,
-  useCompletePacking,
-  useCompleteOrder,
-  useLogException,
-  useOrder,
-  usePickItem,
-} from '@/services/api';
+import { skuApi, useCompleteOrder, useLogException, useOrder, usePickItem } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
@@ -425,8 +417,6 @@ export function PickingPage() {
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const pickMutation = usePickItem();
   const completeMutation = useCompleteOrder();
-  const claimForPackingMutation = useClaimOrderForPacking();
-  const completePackingMutation = useCompletePacking();
   const logExceptionMutation = useLogException();
 
   useEffect(() => {
@@ -988,11 +978,17 @@ export function PickingPage() {
 
   // Get current pick task
   const currentTask = order?.items?.[currentTaskIndex];
+  const isItemSkipped = (
+    item: { status?: string; skipReason?: string | null } | null | undefined
+  ) =>
+    Boolean(
+      item && ((item.skipReason && item.skipReason.trim().length > 0) || item.status === 'SKIPPED')
+    );
 
   // Calculate progress
   const totalTasks = order?.items?.length || 0;
   const completedTasks =
-    order?.items?.filter(item => item.pickedQuantity >= item.quantity || item.status === 'SKIPPED')
+    order?.items?.filter(item => item.pickedQuantity >= item.quantity || isItemSkipped(item))
       .length || 0;
 
   // Reset scan error when current task changes
@@ -1004,7 +1000,7 @@ export function PickingPage() {
   useEffect(() => {
     if (order?.items && order.items.length > 0) {
       let nextIndex = order.items.findIndex(
-        item => item.status !== 'SKIPPED' && item.pickedQuantity < item.quantity
+        item => !isItemSkipped(item) && item.pickedQuantity < item.quantity
       );
 
       if (pickingTaskStorageKey) {
@@ -1013,7 +1009,7 @@ export function PickingPage() {
           Number.isInteger(storedIndex) &&
           storedIndex >= 0 &&
           storedIndex < order.items.length &&
-          order.items[storedIndex].status !== 'SKIPPED' &&
+          !isItemSkipped(order.items[storedIndex]) &&
           order.items[storedIndex].pickedQuantity < order.items[storedIndex].quantity
         ) {
           nextIndex = storedIndex;
@@ -1023,14 +1019,14 @@ export function PickingPage() {
       const currentItem = order.items[currentTaskIndex];
       const isCurrentItemSelectable =
         currentItem &&
-        currentItem.status !== 'SKIPPED' &&
+        !isItemSkipped(currentItem) &&
         currentItem.pickedQuantity < currentItem.quantity;
 
       if (!isCurrentItemSelectable && nextIndex !== -1 && nextIndex !== currentTaskIndex) {
         setSelectedTaskIndex(nextIndex);
       }
     }
-  }, [currentTaskIndex, order, setSelectedTaskIndex]);
+  }, [currentTaskIndex, order, pickingTaskStorageKey, setSelectedTaskIndex]);
 
   useEffect(() => {
     if (pickingTaskStorageKey) {
@@ -1069,7 +1065,7 @@ export function PickingPage() {
     for (let i = 0; i < order.items.length; i++) {
       const item = order.items[i];
       const isCompleted = item.pickedQuantity >= item.quantity;
-      const isSkipped = item.status === 'SKIPPED';
+      const isSkipped = isItemSkipped(item);
 
       // Skip completed or skipped items
       if (isCompleted || isSkipped) continue;
@@ -1102,7 +1098,7 @@ export function PickingPage() {
           const matchesBarcode = item.barcode && scanValueTrimmed === item.barcode;
           const matchesSku = scanValueTrimmed === item.sku;
           if (matchesBarcode || matchesSku) {
-            if (item.status === 'SKIPPED') {
+            if (isItemSkipped(item)) {
               setScanError(
                 `Item was skipped: ${getOrderItemDisplayName(item)}. Revert the skip to pick it.`
               );
@@ -1171,7 +1167,7 @@ export function PickingPage() {
 
   const handleCompleteOrder = async () => {
     // Check for skipped items
-    const skippedItems = order.items.filter(item => item.status === 'SKIPPED');
+    const skippedItems = order.items.filter(item => isItemSkipped(item));
 
     if (skippedItems && skippedItems.length > 0) {
       // Show confirmation dialog for skipped items
@@ -1219,87 +1215,23 @@ export function PickingPage() {
   };
 
   const handleFulfillmentDone = useCallback(async () => {
-    const completionOrderId = fulfillmentPreviewOrder?.orderId || orderId;
-    if (!completionOrderId) {
-      navigate(pickingQueuePath);
-      return;
-    }
-
-    const currentFulfillmentStatus = fulfillmentPreviewOrder?.status || order?.status;
-
     try {
-      const latestOrderResponse = await refetch();
-      const latestOrder = latestOrderResponse.data;
-      let effectiveStatus = latestOrder?.status || currentFulfillmentStatus;
-
-      if (effectiveStatus === OrderStatus.PICKED) {
-        try {
-          await claimForPackingMutation.mutateAsync({
-            orderId: completionOrderId,
-            packerId: currentUser.userId,
-          });
-          effectiveStatus = OrderStatus.PACKING;
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-          const isAlreadyAdvancedConflict =
-            errorMessage.includes('409') ||
-            errorMessage.includes('conflict') ||
-            errorMessage.includes('already claimed') ||
-            errorMessage.includes('already assigned') ||
-            errorMessage.includes('packing');
-
-          if (!isAlreadyAdvancedConflict) {
-            throw error;
-          }
-
-          effectiveStatus = OrderStatus.PACKING;
-        }
-      }
-
-      if (effectiveStatus === OrderStatus.PICKED || effectiveStatus === OrderStatus.PACKING) {
-        try {
-          await completePackingMutation.mutateAsync({
-            orderId: completionOrderId,
-            dto: {
-              orderId: completionOrderId,
-              packerId: currentUser.userId,
-            },
-          });
-        } catch (error) {
-          const refreshedOrderResponse = await refetch();
-          const refreshedOrder = refreshedOrderResponse.data;
-
-          if (
-            refreshedOrder?.status !== OrderStatus.PACKED &&
-            refreshedOrder?.status !== OrderStatus.SHIPPED
-          ) {
-            throw error;
-          }
-        }
-      }
-
       if (fulfillmentPreviewStorageKey) {
         sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+        localStorage.removeItem(fulfillmentPreviewStorageKey);
       }
 
       setFulfillmentPreviewOrder(null);
-      showToast('Order packed!', 'success');
+      showToast('Order sent to packing queue.', 'success');
       navigate(pickingQueuePath);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to complete packing', 'error');
+      showToast(error instanceof Error ? error.message : 'Failed to close packing slip', 'error');
     }
   }, [
-    claimForPackingMutation,
-    completePackingMutation,
-    currentUser.userId,
     fulfillmentPreviewOrder,
     fulfillmentPreviewStorageKey,
     navigate,
-    order?.status,
-    orderId,
     pickingQueuePath,
-    refetch,
     showToast,
   ]);
 
@@ -1819,11 +1751,7 @@ export function PickingPage() {
                   <PrinterIcon className="h-5 w-5 mr-2" />
                   Print Packing Slip
                 </Button>
-                <Button
-                  variant="success"
-                  onClick={handleFulfillmentDone}
-                  isLoading={claimForPackingMutation.isPending || completePackingMutation.isPending}
-                >
+                <Button variant="success" onClick={handleFulfillmentDone}>
                   Done
                 </Button>
               </div>
@@ -2184,7 +2112,7 @@ export function PickingPage() {
                       <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
                         {order.items.map((item, index) => {
                           const isCompleted = item.pickedQuantity >= item.quantity;
-                          const isSkipped = item.status === 'SKIPPED';
+                          const isSkipped = isItemSkipped(item);
                           const isCurrent = index === currentTaskIndex;
                           const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
 

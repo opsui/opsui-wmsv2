@@ -83,8 +83,8 @@ describe('OrderService', () => {
   };
 
   beforeEach(() => {
+    jest.resetAllMocks();
     orderService = new OrderService();
-    jest.clearAllMocks();
 
     // Default mock implementations
     query.mockResolvedValue({ rows: [], rowCount: 0 });
@@ -96,6 +96,10 @@ describe('OrderService', () => {
         query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
       })
     );
+    orderRepository.getOrderWithItems.mockResolvedValue({ ...mockOrder });
+    orderRepository.updateStatus.mockResolvedValue({ ...mockOrder });
+    orderRepository.update.mockResolvedValue(undefined);
+    orderRepository.cancelOrder.mockResolvedValue({ ...mockOrder });
   });
 
   afterEach(() => {});
@@ -301,15 +305,58 @@ describe('OrderService', () => {
         orderId: 'ORD-TEST-001',
         pickerId: 'picker-123',
       };
-      const completedOrder = { ...mockOrder, status: OrderStatus.PICKED };
+      const pickingOrder = {
+        ...mockOrder,
+        status: OrderStatus.PICKING,
+        pickerId: 'picker-123',
+      };
+      const completedOrder = { ...mockOrder, status: OrderStatus.PICKED, pickerId: 'picker-123' };
 
-      query.mockResolvedValue({ rows: [], rowCount: 0 });
+      orderRepository.getOrderWithItems.mockResolvedValueOnce(pickingOrder);
+      query.mockResolvedValueOnce({
+        rows: [{ total_tasks: 2, incomplete_tasks: 0 }],
+        rowCount: 1,
+      });
       orderRepository.updateStatus.mockResolvedValue(completedOrder);
 
       const result = await orderService.completeOrder('ORD-TEST-001', completeDTO);
 
       expect(result).toEqual(completedOrder);
       expect(orderRepository.updateStatus).toHaveBeenCalledWith('ORD-TEST-001', OrderStatus.PICKED);
+    });
+
+    it('should reject completion when another picker tries to finish the order', async () => {
+      orderRepository.getOrderWithItems.mockResolvedValueOnce({
+        ...mockOrder,
+        status: OrderStatus.PICKING,
+        pickerId: 'other-picker',
+      });
+
+      await expect(
+        orderService.completeOrder('ORD-TEST-001', {
+          orderId: 'ORD-TEST-001',
+          pickerId: 'picker-123',
+        })
+      ).rejects.toThrow(ValidationError);
+    });
+
+    it('should reject completion when pick tasks are still incomplete', async () => {
+      orderRepository.getOrderWithItems.mockResolvedValueOnce({
+        ...mockOrder,
+        status: OrderStatus.PICKING,
+        pickerId: 'picker-123',
+      });
+      query.mockResolvedValueOnce({
+        rows: [{ total_tasks: 3, incomplete_tasks: 1 }],
+        rowCount: 1,
+      });
+
+      await expect(
+        orderService.completeOrder('ORD-TEST-001', {
+          orderId: 'ORD-TEST-001',
+          pickerId: 'picker-123',
+        })
+      ).rejects.toThrow(ValidationError);
     });
   });
 
@@ -467,6 +514,10 @@ describe('OrderService', () => {
       orderRepository.getOrderWithItems
         .mockResolvedValueOnce(packingOrder)
         .mockResolvedValueOnce(packedOrder);
+      query.mockResolvedValueOnce({
+        rows: [{ order_item_id: 'oi-001', quantity: 2, verified_quantity: 2, skip_reason: null }],
+        rowCount: 1,
+      });
       orderRepository.update.mockResolvedValue(undefined);
 
       const result = await orderService.completePacking('ORD-TEST-001', 'packer-123');
@@ -565,25 +616,66 @@ describe('OrderService', () => {
         .mockResolvedValueOnce(packedOrder);
       orderRepository.update.mockResolvedValue(undefined);
 
-      query
-        .mockResolvedValueOnce({
-          rows: [
-            {
-              organizationId: 'ORG320EDF1',
-              netsuiteSoInternalId: '1604613',
-              netsuiteSoTranId: 'SO68539',
-              netsuiteIfInternalId: null,
-            },
-          ],
-          rowCount: 1,
-        })
-        .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // order_items query (no skipped items)
-        .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // UPDATE orders
+      query.mockImplementation((sql: string) => {
+        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+          return {
+            rows: [
+              {
+                order_item_id: 'oi-001',
+                sku: 'SHIP-SKU',
+                quantity: 2,
+                verified_quantity: 2,
+                skip_reason: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('FROM orders o')) {
+          return {
+            rows: [
+              {
+                organizationId: 'ORG320EDF1',
+                netsuiteSoInternalId: '1604613',
+                netsuiteSoTranId: 'SO68539',
+                netsuiteIfInternalId: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (
+          sql.includes(
+            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
+          )
+        ) {
+          return {
+            rows: [
+              {
+                sku: 'SHIP-SKU',
+                name: 'Shipped item',
+                quantity: 2,
+                pickedQuantity: 2,
+                verifiedQuantity: 2,
+                status: 'FULLY_PICKED',
+                skip_reason: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('SELECT netsuite_if_internal_id')) {
+          return { rows: [{ netsuite_if_internal_id: '1606001' }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 1 };
+      });
 
       const result = await orderService.completePacking('SO68539', 'packer-123');
 
       expect(getItemFulfillmentsBySalesOrder).toHaveBeenCalledWith(['1604613']);
-      expect(createItemFulfillment).toHaveBeenCalledWith('1604613', { lines: [] });
+      expect(createItemFulfillment).toHaveBeenCalledWith('1604613', {
+        lines: [{ sku: 'SHIP-SKU', itemName: 'Shipped item', quantity: 2 }],
+      });
       expect(getItemFulfillment).toHaveBeenCalledWith('1606001');
       expect(result.status).toBe(OrderStatus.PACKED);
     });
@@ -626,19 +718,50 @@ describe('OrderService', () => {
 
       orderRepository.getOrderWithItems.mockResolvedValue(packingOrder);
 
-      query
-        .mockResolvedValueOnce({
-          rows: [
-            {
-              organizationId: 'ORG320EDF1',
-              netsuiteSoInternalId: '1604613',
-              netsuiteSoTranId: 'SO68539',
-              netsuiteIfInternalId: null,
-            },
-          ],
-          rowCount: 1,
-        })
-        .mockResolvedValueOnce({ rows: [], rowCount: 0 }); // order_items query
+      query.mockImplementation((sql: string) => {
+        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+          return {
+            rows: [
+              { order_item_id: 'oi-001', quantity: 1, verified_quantity: 1, skip_reason: null },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('FROM orders o')) {
+          return {
+            rows: [
+              {
+                organizationId: 'ORG320EDF1',
+                netsuiteSoInternalId: '1604613',
+                netsuiteSoTranId: 'SO68539',
+                netsuiteIfInternalId: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (
+          sql.includes(
+            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
+          )
+        ) {
+          return {
+            rows: [
+              {
+                sku: 'SHIP-SKU',
+                name: 'Shipped item',
+                quantity: 1,
+                pickedQuantity: 1,
+                verifiedQuantity: 1,
+                status: 'FULLY_PICKED',
+                skip_reason: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        return { rows: [], rowCount: 0 };
+      });
 
       await expect(orderService.completePacking('SO68539', 'packer-123')).rejects.toThrow(
         'Failed to create item fulfillment for SO 1604613: blocked'
@@ -695,32 +818,68 @@ describe('OrderService', () => {
         .mockResolvedValueOnce(packedOrder);
       orderRepository.update.mockResolvedValue(undefined);
 
-      query
-        .mockResolvedValueOnce({
-          rows: [
-            {
-              organizationId: 'ORG320EDF1',
-              netsuiteSoInternalId: '1604613',
-              netsuiteSoTranId: 'SO68539',
-              netsuiteIfInternalId: null,
-            },
-          ],
-          rowCount: 1,
-        })
-        .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // order_items query
-        .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // UPDATE orders
+      query.mockImplementation((sql: string, params?: any[]) => {
+        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+          return {
+            rows: [
+              { order_item_id: 'oi-001', quantity: 1, verified_quantity: 1, skip_reason: null },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('FROM orders o')) {
+          return {
+            rows: [
+              {
+                organizationId: 'ORG320EDF1',
+                netsuiteSoInternalId: '1604613',
+                netsuiteSoTranId: 'SO68539',
+                netsuiteIfInternalId: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (
+          sql.includes(
+            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
+          )
+        ) {
+          return {
+            rows: [
+              {
+                sku: 'SHIP-SKU',
+                name: 'Shipped item',
+                quantity: 1,
+                pickedQuantity: 1,
+                verifiedQuantity: 1,
+                status: 'FULLY_PICKED',
+                skip_reason: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('SELECT netsuite_if_internal_id')) {
+          return { rows: [{ netsuite_if_internal_id: '1607002' }], rowCount: 1 };
+        }
+        if (sql.includes('UPDATE orders')) {
+          return { rows: [], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
 
       await orderService.completePacking('SO68539', 'packer-123');
 
       expect(createItemFulfillment).not.toHaveBeenCalled();
-      expect(query).toHaveBeenNthCalledWith(3, expect.stringContaining('UPDATE orders'), [
+      expect(query).toHaveBeenCalledWith(expect.stringContaining('UPDATE orders'), [
         '1607002',
         'IF73610',
         'SO68539',
       ]);
     });
 
-    it('should not fulfill pending lines that only have stale picked quantities', async () => {
+    it('should only fulfill verified lines when other lines were explicitly skipped', async () => {
       const packingOrder = {
         ...mockOrder,
         orderId: 'SO68539',
@@ -767,40 +926,75 @@ describe('OrderService', () => {
         .mockResolvedValueOnce(packedOrder);
       orderRepository.update.mockResolvedValue(undefined);
 
-      query
-        .mockResolvedValueOnce({
-          rows: [
-            {
-              organizationId: 'ORG320EDF1',
-              netsuiteSoInternalId: '1604613',
-              netsuiteSoTranId: 'SO68539',
-              netsuiteIfInternalId: null,
-            },
-          ],
-          rowCount: 1,
-        })
-        .mockResolvedValueOnce({
-          rows: [
-            {
-              sku: 'BACKORDER-SKU',
-              name: 'Backordered item',
-              quantity: 1,
-              pickedQuantity: 1,
-              verifiedQuantity: 0,
-              status: 'PENDING',
-            },
-            {
-              sku: 'SHIP-SKU',
-              name: 'Shipped item',
-              quantity: 2,
-              pickedQuantity: 2,
-              verifiedQuantity: 0,
-              status: 'FULLY_PICKED',
-            },
-          ],
-          rowCount: 2,
-        })
-        .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+      query.mockImplementation((sql: string) => {
+        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+          return {
+            rows: [
+              {
+                order_item_id: 'oi-001',
+                sku: 'BACKORDER-SKU',
+                quantity: 1,
+                verified_quantity: 0,
+                skip_reason: 'Backordered',
+              },
+              {
+                order_item_id: 'oi-002',
+                sku: 'SHIP-SKU',
+                quantity: 2,
+                verified_quantity: 2,
+                skip_reason: null,
+              },
+            ],
+            rowCount: 2,
+          };
+        }
+        if (sql.includes('FROM orders o')) {
+          return {
+            rows: [
+              {
+                organizationId: 'ORG320EDF1',
+                netsuiteSoInternalId: '1604613',
+                netsuiteSoTranId: 'SO68539',
+                netsuiteIfInternalId: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (
+          sql.includes(
+            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
+          )
+        ) {
+          return {
+            rows: [
+              {
+                sku: 'BACKORDER-SKU',
+                name: 'Backordered item',
+                quantity: 1,
+                pickedQuantity: 1,
+                verifiedQuantity: 0,
+                status: 'FULLY_PICKED',
+                skip_reason: 'Backordered',
+              },
+              {
+                sku: 'SHIP-SKU',
+                name: 'Shipped item',
+                quantity: 2,
+                pickedQuantity: 2,
+                verifiedQuantity: 2,
+                status: 'FULLY_PICKED',
+                skip_reason: null,
+              },
+            ],
+            rowCount: 2,
+          };
+        }
+        if (sql.includes('SELECT netsuite_if_internal_id')) {
+          return { rows: [{ netsuite_if_internal_id: '1606001' }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 1 };
+      });
 
       await orderService.completePacking('SO68539', 'packer-123');
 
@@ -808,43 +1002,89 @@ describe('OrderService', () => {
         lines: [{ sku: 'SHIP-SKU', itemName: 'Shipped item', quantity: 2 }],
       });
     });
+
+    it('should reject packing completion while unverified lines remain', async () => {
+      orderRepository.getOrderWithItems.mockResolvedValueOnce({
+        ...mockOrder,
+        status: OrderStatus.PACKING,
+        packerId: 'packer-123',
+      });
+      query.mockResolvedValueOnce({
+        rows: [{ order_item_id: 'oi-001', quantity: 2, verified_quantity: 1, skip_reason: null }],
+        rowCount: 1,
+      });
+
+      await expect(orderService.completePacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
+        ConflictError
+      );
+    });
   });
 
   describe('verifyPackingItem', () => {
     it('should verify packing item', async () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM orders') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ order_id: 'ORD-TEST-001', status: OrderStatus.PACKING }] };
+          }
+          if (sql.includes('FROM order_items') && sql.includes('FOR UPDATE')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'oi-001',
+                  quantity: 10,
+                  picked_quantity: 10,
+                  verified_quantity: 5,
+                  status: 'PENDING',
+                  skip_reason: null,
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
 
       orderRepository.getOrderWithItems
         .mockResolvedValueOnce(packingOrder)
         .mockResolvedValueOnce(updatedOrder);
-      query.mockImplementation((sql, params) => {
-        if (sql.includes('SELECT order_item_id')) {
-          return { rows: [{ orderItemId: 'oi-001', quantity: 10, verifiedQuantity: 5 }] };
-        }
-        return { rows: [], rowCount: 1 };
-      });
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       const result = await orderService.verifyPackingItem('ORD-TEST-001', 'oi-001', 3);
 
       expect(result).toBeDefined();
-      expect(query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE order_items SET verified_quantity'),
-        expect.arrayContaining([3, 'oi-001'])
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET verified_quantity = $1'),
+        [8, 'FULLY_PICKED', 'oi-001']
       );
     });
 
     it('should throw ConflictError when verifying more than ordered', async () => {
-      orderRepository.getOrderWithItems.mockResolvedValue({
-        ...mockOrder,
-        status: OrderStatus.PACKING,
-      });
-      query.mockImplementation((sql, params) => {
-        if (sql.includes('SELECT order_item_id')) {
-          return { rows: [{ orderItemId: 'oi-001', quantity: 10, verifiedQuantity: 9 }] };
-        }
-        return { rows: [], rowCount: 1 };
-      });
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM orders') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ order_id: 'ORD-TEST-001', status: OrderStatus.PACKING }] };
+          }
+          if (sql.includes('FROM order_items') && sql.includes('FOR UPDATE')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'oi-001',
+                  quantity: 10,
+                  picked_quantity: 10,
+                  verified_quantity: 9,
+                  status: 'PENDING',
+                  skip_reason: null,
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       await expect(orderService.verifyPackingItem('ORD-TEST-001', 'oi-001', 5)).rejects.toThrow(
         ConflictError
@@ -856,18 +1096,40 @@ describe('OrderService', () => {
     it('should skip packing item with reason', async () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM orders') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ order_id: 'ORD-TEST-001', status: OrderStatus.PACKING }] };
+          }
+          if (sql.includes('FROM order_items') && sql.includes('FOR UPDATE')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'oi-001',
+                  quantity: 2,
+                  picked_quantity: 2,
+                  verified_quantity: 0,
+                  status: 'PENDING',
+                  skip_reason: null,
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
 
       orderRepository.getOrderWithItems
         .mockResolvedValueOnce(packingOrder)
         .mockResolvedValueOnce(updatedOrder);
-      query.mockResolvedValue({ rows: [], rowCount: 1 });
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       const result = await orderService.skipPackingItem('ORD-TEST-001', 'oi-001', 'Damaged item');
 
       expect(result).toBeDefined();
-      expect(query).toHaveBeenCalledWith(
-        expect.stringContaining("UPDATE order_items SET status = 'SKIPPED'"),
-        expect.arrayContaining(['Damaged item', 'oi-001'])
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET status = $1::order_item_status'),
+        ['FULLY_PICKED', 'Damaged item', 0, 'oi-001']
       );
     });
 
@@ -882,43 +1144,48 @@ describe('OrderService', () => {
         netsuiteSoTranId: 'SO68561',
       };
       const updatedOrder = { ...packingOrder };
-      const defaultPoolQuery = jest.fn().mockResolvedValue({
-        rows: [
-          {
-            integration_id: 'INT-AAP-NS01',
-            configuration: {
-              auth: {
-                accountId: 'acc',
-                tokenId: 'tid',
-                tokenSecret: 'tsec',
-                consumerKey: 'ck',
-                consumerSecret: 'cs',
-              },
-            },
-          },
-        ],
-        rowCount: 1,
-      });
-      const updateSalesOrderStatus = jest.fn().mockResolvedValue(undefined);
-
-      NetSuiteClient.mockImplementation(() => ({
-        updateSalesOrderStatus,
-      }));
-      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
+      const markNetSuiteOrderNotReadyToShip = jest
+        .spyOn(orderService as any, 'markNetSuiteOrderNotReadyToShip')
+        .mockResolvedValue(undefined);
 
       orderRepository.getOrderWithItems
         .mockResolvedValueOnce(packingOrder)
         .mockResolvedValueOnce(updatedOrder);
-      query
-        .mockResolvedValueOnce({
-          rows: [{ order_item_id: 'oi-001', quantity: 2, verified_quantity: 0 }],
-          rowCount: 1,
-        })
-        .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM orders') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ order_id: 'SO68561', status: OrderStatus.PACKING }] };
+          }
+          if (sql.includes('FROM order_items') && sql.includes('FOR UPDATE')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'oi-001',
+                  quantity: 2,
+                  picked_quantity: 2,
+                  verified_quantity: 0,
+                  status: 'PENDING',
+                  skip_reason: null,
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       await orderService.skipPackingItem('SO68561', 'oi-001', 'Backordered', 1);
 
-      expect(updateSalesOrderStatus).toHaveBeenCalledWith('1604613', { custbody8: false });
+      expect(markNetSuiteOrderNotReadyToShip).toHaveBeenCalledWith(
+        'SO68561',
+        expect.objectContaining({ netsuiteSoInternalId: '1604613' }),
+        'Backordered'
+      );
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET status = $1::order_item_status'),
+        ['FULLY_PICKED', 'Backordered', 1, 'oi-001']
+      );
     });
   });
 
@@ -926,16 +1193,33 @@ describe('OrderService', () => {
     it('should undo packing verification', async () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM orders') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ order_id: 'ORD-TEST-001', status: OrderStatus.PACKING }] };
+          }
+          if (sql.includes('FROM order_items') && sql.includes('FOR UPDATE')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'oi-001',
+                  quantity: 10,
+                  picked_quantity: 10,
+                  verified_quantity: 5,
+                  status: 'PENDING',
+                  skip_reason: null,
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
 
       orderRepository.getOrderWithItems
         .mockResolvedValueOnce(packingOrder)
         .mockResolvedValueOnce(updatedOrder);
-      query.mockImplementation((sql, params) => {
-        if (sql.includes('SELECT order_item_id')) {
-          return { rows: [{ orderItemId: 'oi-001', verifiedQuantity: 5, status: 'PENDING' }] };
-        }
-        return { rows: [], rowCount: 1 };
-      });
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       const result = await orderService.undoPackingVerification(
         'ORD-TEST-001',
@@ -945,31 +1229,48 @@ describe('OrderService', () => {
       );
 
       expect(result).toBeDefined();
-      expect(query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE order_items SET verified_quantity = GREATEST'),
-        expect.arrayContaining([2, 'oi-001'])
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET verified_quantity = $1'),
+        [3, 'FULLY_PICKED', null, 'oi-001']
       );
     });
 
-    it('should revert SKIPPED status when undoing', async () => {
+    it('should preserve the skip marker when undoing a partially skipped line', async () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM orders') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ order_id: 'ORD-TEST-001', status: OrderStatus.PACKING }] };
+          }
+          if (sql.includes('FROM order_items') && sql.includes('FOR UPDATE')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'oi-001',
+                  quantity: 5,
+                  picked_quantity: 5,
+                  verified_quantity: 5,
+                  status: 'SKIPPED',
+                  skip_reason: 'Backordered',
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
 
       orderRepository.getOrderWithItems
         .mockResolvedValueOnce(packingOrder)
         .mockResolvedValueOnce(updatedOrder);
-      query.mockImplementation((sql, params) => {
-        if (sql.includes('SELECT order_item_id')) {
-          return { rows: [{ orderItemId: 'oi-001', verifiedQuantity: 5, status: 'SKIPPED' }] };
-        }
-        return { rows: [], rowCount: 1 };
-      });
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       await orderService.undoPackingVerification('ORD-TEST-001', 'oi-001', 2, 'Mistake');
 
-      expect(query).toHaveBeenCalledWith(
-        expect.stringContaining("UPDATE order_items SET status = 'PENDING'"),
-        expect.arrayContaining(['oi-001'])
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET verified_quantity = $1'),
+        [3, 'FULLY_PICKED', 'Backordered', 'oi-001']
       );
     });
   });
@@ -1021,6 +1322,125 @@ describe('OrderService', () => {
       await expect(
         orderService.unclaimPackingOrder('ORD-TEST-001', 'packer-123', 'Test reason')
       ).rejects.toThrow(ValidationError);
+    });
+  });
+
+  describe('manualOverride', () => {
+    it('logs packing overrides to order_exceptions instead of picking_exceptions', async () => {
+      const packingOrder = {
+        ...mockOrder,
+        orderId: 'SO68561',
+        status: OrderStatus.PACKING,
+      };
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM pick_tasks pt')) {
+            return { rows: [] };
+          }
+          if (sql.includes('FROM order_items oi')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'OI-SO68561-0',
+                  order_id: 'SO68561',
+                  sku: 'INFINITY LINK',
+                  quantity: 1,
+                  picked_quantity: 1,
+                  verified_quantity: 0,
+                  status: 'FULLY_PICKED',
+                  skip_reason: null,
+                  order_status: OrderStatus.PACKING,
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
+
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
+      orderRepository.getOrderWithItems.mockResolvedValue(packingOrder);
+
+      const result = await orderService.manualOverride(
+        'OI-SO68561-0',
+        1,
+        'Manual override',
+        'Confirmed by packer',
+        'packer-123'
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.order).toEqual(packingOrder);
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO order_exceptions'),
+        expect.arrayContaining([
+          'SO68561',
+          'OI-SO68561-0',
+          'INFINITY LINK',
+          1,
+          1,
+          'Manual override',
+          'Confirmed by packer',
+          'packer-123',
+        ])
+      );
+      expect(
+        mockClient.query.mock.calls.some(([sql]: [string]) =>
+          sql.includes('INSERT INTO picking_exceptions')
+        )
+      ).toBe(false);
+    });
+
+    it('clears packing skip reasons without relying on a SKIPPED enum value', async () => {
+      const packingOrder = {
+        ...mockOrder,
+        orderId: 'SO68561',
+        status: OrderStatus.PACKING,
+      };
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM pick_tasks pt')) {
+            return { rows: [] };
+          }
+          if (sql.includes('FROM order_items oi')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'OI-SO68561-2',
+                  order_id: 'SO68561',
+                  sku: 'DM12-7.5',
+                  quantity: 4,
+                  picked_quantity: 4,
+                  verified_quantity: 0,
+                  status: 'FULLY_PICKED',
+                  skip_reason: 'Backordered',
+                  order_status: OrderStatus.PACKING,
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
+
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
+      orderRepository.getOrderWithItems.mockResolvedValue(packingOrder);
+
+      await orderService.manualOverride(
+        'OI-SO68561-2',
+        2,
+        'Manual override',
+        'Resolved at packing bench',
+        'packer-123'
+      );
+
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET verified_quantity = $1'),
+        [2, 'FULLY_PICKED', null, 'OI-SO68561-2']
+      );
+      expect(
+        mockClient.query.mock.calls.some(([sql]: [string]) => sql.includes("status = 'SKIPPED'"))
+      ).toBe(false);
     });
   });
 
@@ -1140,6 +1560,8 @@ describe('OrderService', () => {
       expect(pickTaskRepository.skipPickTask).toHaveBeenCalledWith('pt-001', 'Out of stock');
       expect(query).toHaveBeenCalledWith(expect.stringContaining('picked_quantity = 0'), [
         'oi-001',
+        'PENDING',
+        'Out of stock',
       ]);
     });
 

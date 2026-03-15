@@ -313,6 +313,91 @@ export class OrderService {
     }
   }
 
+  private hasSkipReason(skipReason: unknown): boolean {
+    return typeof skipReason === 'string' ? skipReason.trim().length > 0 : Boolean(skipReason);
+  }
+
+  private derivePickedItemStatus(
+    pickedQuantity: unknown,
+    orderedQuantity: unknown,
+    verifiedQuantity: unknown = 0
+  ): 'PENDING' | 'PARTIAL_PICKED' | 'FULLY_PICKED' {
+    const normalizedOrdered = Math.max(0, Number(orderedQuantity || 0));
+    const normalizedPicked = Math.max(0, Number(pickedQuantity || 0));
+    const normalizedVerified = Math.max(0, Number(verifiedQuantity || 0));
+
+    const effectiveQuantity = Math.min(
+      normalizedOrdered,
+      Math.max(normalizedPicked, normalizedVerified)
+    );
+
+    if (effectiveQuantity >= normalizedOrdered && normalizedOrdered > 0) {
+      return 'FULLY_PICKED';
+    }
+
+    if (effectiveQuantity > 0) {
+      return 'PARTIAL_PICKED';
+    }
+
+    return 'PENDING';
+  }
+
+  private isPackingLineComplete(item: {
+    quantity?: unknown;
+    verifiedQuantity?: unknown;
+    verified_quantity?: unknown;
+    skipReason?: unknown;
+    skip_reason?: unknown;
+  }): boolean {
+    const verifiedQuantity = Number(item.verifiedQuantity ?? item.verified_quantity ?? 0);
+    const orderedQuantity = Number(item.quantity ?? 0);
+    return (
+      verifiedQuantity >= orderedQuantity || this.hasSkipReason(item.skipReason ?? item.skip_reason)
+    );
+  }
+
+  private async recalculatePickingProgress(
+    client: { query: (text: string, params?: any[]) => Promise<any> },
+    orderId: string
+  ): Promise<void> {
+    await client.query(
+      `UPDATE orders
+         SET progress = (
+           SELECT FLOOR(
+             (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
+              NULLIF(COUNT(*), 0)) * 100 + 0.5
+           )
+           FROM pick_tasks pt
+           WHERE pt.order_id = $1
+         )
+       WHERE order_id = $1`,
+      [orderId]
+    );
+  }
+
+  private async recalculatePackingProgress(
+    client: { query: (text: string, params?: any[]) => Promise<any> },
+    orderId: string
+  ): Promise<void> {
+    await client.query(
+      `UPDATE orders
+         SET progress = COALESCE(ROUND(
+           CAST((
+             SELECT COUNT(*)
+             FROM order_items oi
+             WHERE oi.order_id = $1
+               AND (
+                 COALESCE(oi.verified_quantity, 0) >= oi.quantity
+                 OR COALESCE(NULLIF(TRIM(oi.skip_reason), ''), NULL) IS NOT NULL
+               )
+           ) AS FLOAT)
+           / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
+         ), 0)
+       WHERE order_id = $1`,
+      [orderId]
+    );
+  }
+
   private async createNetSuiteFulfillmentForPickedOrder(orderId: string): Promise<void> {
     const orderResult = await query(
       `SELECT
@@ -349,7 +434,7 @@ export class OrderService {
     const client = integration.client;
 
     const orderItemsResult = await query(
-      `SELECT sku, name, quantity, picked_quantity, verified_quantity, status
+      `SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason
        FROM order_items
        WHERE order_id = $1
        ORDER BY order_item_id`,
@@ -362,6 +447,7 @@ export class OrderService {
         const pickedQuantity = Number(item.pickedQuantity || 0);
         const orderedQuantity = Number(item.quantity || 0);
         const itemStatus = String(item.status || '').toUpperCase();
+        const hasSkipReason = this.hasSkipReason(item.skipReason ?? item.skip_reason);
 
         // Verified quantity is the strongest source of truth during packing.
         // If we have no verification yet, only fall back to picked quantity for
@@ -370,7 +456,7 @@ export class OrderService {
         const fulfillmentQuantity =
           verifiedQuantity > 0
             ? verifiedQuantity
-            : itemStatus !== 'SKIPPED' && itemStatus !== 'PENDING'
+            : !hasSkipReason && itemStatus !== 'PENDING'
               ? pickedQuantity
               : 0;
 
@@ -853,13 +939,15 @@ export class OrderService {
       const pickedQuantity = task.quantity - skipQuantity!;
       pickTask = await pickTaskRepository.partialSkipPickTask(pickTaskId, pickedQuantity);
 
+      const itemStatus = this.derivePickedItemStatus(pickedQuantity, task.quantity);
+
       // Update order_item to reflect partial pick
       if (task.order_item_id) {
         await query(
           `UPDATE order_items
-             SET picked_quantity = $1, status = 'FULLY_PICKED'
-             WHERE order_item_id = $2`,
-          [pickedQuantity, task.order_item_id]
+             SET picked_quantity = $1, status = $2::order_item_status
+             WHERE order_item_id = $3`,
+          [pickedQuantity, itemStatus, task.order_item_id]
         );
       }
     } else {
@@ -869,28 +957,17 @@ export class OrderService {
       if (task.order_item_id) {
         await query(
           `UPDATE order_items
-             SET status = 'SKIPPED',
-                 picked_quantity = 0
+             SET status = $2::order_item_status,
+                 picked_quantity = 0,
+                 skip_reason = $3
            WHERE order_item_id = $1`,
-          [task.order_item_id]
+          [task.order_item_id, 'PENDING', reason]
         );
       }
     }
 
     // Recalculate order progress so skipped/completed tasks count toward completion immediately
-    await query(
-      `UPDATE orders
-         SET progress = (
-           SELECT FLOOR(
-             (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
-              NULLIF(COUNT(*), 0)) * 100 + 0.5
-           )
-           FROM pick_tasks pt
-           WHERE pt.order_id = $1
-         )
-         WHERE order_id = $1`,
-      [pickTask.orderId]
-    );
+    await this.recalculatePickingProgress({ query }, pickTask.orderId);
 
     // Return updated order
     return this.getOrder(pickTask.orderId);
@@ -1063,52 +1140,52 @@ export class OrderService {
       const exceptionId = `PEX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       await client.query(
-        `INSERT INTO picking_exceptions (
-          exception_id, order_id, order_item_id, pick_task_id, user_id, sku,
-          exception_type, original_qty, new_qty, previous_picked_qty, reason, notes, created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
+        `INSERT INTO order_exceptions (
+          exception_id, order_id, order_item_id, sku, type, status, resolution,
+          quantity_expected, quantity_actual, reason, resolution_notes,
+          reported_by, reported_at, resolved_by, resolved_at
+        ) VALUES ($1, $2, $3, $4, 'OTHER', 'RESOLVED', 'MANUAL_OVERRIDE',
+                  $5, $6, $7, $8, $9, NOW(), $9, NOW())`,
         [
           exceptionId,
           orderId,
           orderItem.order_item_id,
-          null,
-          userId,
           orderItem.sku,
-          'MANUAL_OVERRIDE',
           orderItem.quantity,
           newQuantity,
-          previousVerifiedQty,
           reason,
           notes || null,
+          userId,
         ]
       );
+
+      const existingSkipReason = this.hasSkipReason(orderItem.skip_reason ?? orderItem.skipReason)
+        ? (orderItem.skip_reason ?? orderItem.skipReason)
+        : null;
+      const updatedStatus =
+        existingSkipReason && newQuantity > 0
+          ? this.derivePickedItemStatus(
+              orderItem.picked_quantity ?? orderItem.pickedQuantity,
+              orderItem.quantity,
+              newQuantity
+            )
+          : orderItem.status;
 
       await client.query(
         `UPDATE order_items
          SET verified_quantity = $1,
-             status = CASE
-               WHEN status = 'SKIPPED' AND $1 > 0 THEN CASE
-                 WHEN picked_quantity >= quantity THEN 'FULLY_PICKED'::order_item_status
-                 WHEN picked_quantity > 0 THEN 'PARTIAL_PICKED'::order_item_status
-                 ELSE 'PENDING'::order_item_status
-               END
-               ELSE status
-             END,
-             skip_reason = CASE
-               WHEN status = 'SKIPPED' AND $1 > 0 THEN NULL
-               ELSE skip_reason
-             END
-         WHERE order_item_id = $2`,
-        [newQuantity, workItemId]
+             status = $2::order_item_status,
+             skip_reason = $3
+         WHERE order_item_id = $4`,
+        [
+          newQuantity,
+          updatedStatus,
+          existingSkipReason && newQuantity > 0 ? null : existingSkipReason,
+          workItemId,
+        ]
       );
 
-      await client.query(
-        `UPDATE orders SET progress = COALESCE(ROUND(
-          CAST((SELECT COUNT(*) FILTER (WHERE oi.verified_quantity >= oi.quantity) FROM order_items oi WHERE oi.order_id = $1) AS FLOAT)
-          / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
-        ), 0) WHERE order_id = $1`,
-        [orderId]
-      );
+      await this.recalculatePackingProgress(client, orderId);
 
       const updatedOrder = await this.getOrder(orderId);
 
@@ -1434,16 +1511,51 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async completeOrder(orderId: string, dto: CompleteOrderDTO): Promise<Order> {
-    const order = await orderRepository.updateStatus(orderId, OrderStatus.PICKED);
+    const order = await this.getOrder(orderId);
+
+    if (order.status !== OrderStatus.PICKING) {
+      throw new ValidationError(`Order is not in PICKING status. Current status: ${order.status}`);
+    }
+
+    if (order.pickerId !== dto.pickerId) {
+      throw new ValidationError('Order is not assigned to this picker');
+    }
+
+    const progressResult = await query(
+      `SELECT
+         COUNT(*)::int as total_tasks,
+         COUNT(*) FILTER (WHERE status NOT IN ('COMPLETED', 'SKIPPED'))::int as incomplete_tasks
+       FROM pick_tasks
+       WHERE order_id = $1`,
+      [orderId]
+    );
+
+    const taskSummary = progressResult.rows[0] || {};
+    const totalTasks = Number(taskSummary.totalTasks ?? taskSummary.total_tasks ?? 0);
+    const incompleteTasks = Number(
+      taskSummary.incompleteTasks ?? taskSummary.incomplete_tasks ?? 0
+    );
+
+    if (totalTasks === 0) {
+      throw new ValidationError('Order has no pick tasks to complete');
+    }
+
+    if (incompleteTasks > 0) {
+      throw new ValidationError(
+        `Cannot complete order while ${incompleteTasks} pick task${incompleteTasks === 1 ? '' : 's'} remain incomplete`
+      );
+    }
+
+    const completedOrder = await orderRepository.updateStatus(orderId, OrderStatus.PICKED);
 
     // Send notification to all users about order being completed
     const broadcaster = wsServer.getBroadcaster();
     if (broadcaster) {
       broadcaster.broadcastOrderCompleted({
-        orderId: order.orderId,
+        orderId: completedOrder.orderId,
         pickerId: dto.pickerId,
         completedAt: new Date(),
-        itemCount: order.items?.length || 0,
+        itemCount: completedOrder.items?.length || 0,
       });
     }
 
@@ -1453,12 +1565,12 @@ export class OrderService {
       type: 'ORDER_COMPLETED',
       channel: 'IN_APP',
       title: 'Order Ready for Packing',
-      message: `Order ${order.orderId} has been picked and is ready for packing`,
+      message: `Order ${completedOrder.orderId} has been picked and is ready for packing`,
       priority: 'HIGH',
-      data: { orderId: order.orderId },
+      data: { orderId: completedOrder.orderId },
     });
 
-    return order;
+    return completedOrder;
   }
 
   // --------------------------------------------------------------------------
@@ -1543,7 +1655,8 @@ export class OrderService {
         `UPDATE orders
          SET status = 'PENDING',
              picker_id = NULL,
-             claimed_at = NULL
+             claimed_at = NULL,
+             progress = 0
          WHERE order_id = $1`,
         [orderId]
       );
@@ -1614,8 +1727,52 @@ export class OrderService {
       throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
     }
 
+    const orderItemsResult = await query(
+      `SELECT order_item_id, sku, quantity, verified_quantity, skip_reason
+       FROM order_items
+       WHERE order_id = $1
+       ORDER BY order_item_id`,
+      [orderId]
+    );
+
+    const incompleteItems = orderItemsResult.rows.filter(
+      (item: any) => !this.isPackingLineComplete(item)
+    );
+    if (incompleteItems.length > 0) {
+      throw new ConflictError(
+        `Cannot complete packing until all lines are fully verified or intentionally skipped (${incompleteItems.length} incomplete)`
+      );
+    }
+
+    const allItemsSkipped =
+      orderItemsResult.rows.length > 0 &&
+      orderItemsResult.rows.every((item: any) =>
+        this.hasSkipReason(item.skipReason ?? item.skip_reason)
+      );
+
     // Create NetSuite fulfillment now (after packing), so skipped packing items are excluded
     await this.createNetSuiteFulfillmentForPickedOrder(orderId);
+
+    if (order.netsuiteSource === 'NETSUITE' && order.netsuiteSoInternalId && !allItemsSkipped) {
+      const netsuiteLinkResult = await query(
+        `SELECT netsuite_if_internal_id
+         FROM orders
+         WHERE order_id = $1
+         LIMIT 1`,
+        [orderId]
+      );
+
+      const netsuiteIfInternalId =
+        netsuiteLinkResult.rows[0]?.netsuiteIfInternalId ??
+        netsuiteLinkResult.rows[0]?.netsuite_if_internal_id ??
+        null;
+
+      if (!netsuiteIfInternalId) {
+        throw new ConflictError(
+          'NetSuite fulfillment was not created for this order, so packing cannot be completed yet'
+        );
+      }
+    }
 
     // Update order status to PACKED
     await orderRepository.update(orderId, {
@@ -1689,48 +1846,63 @@ export class OrderService {
   ): Promise<Order> {
     logger.info('Verifying packing item', { orderId, orderItemId, quantity });
 
-    const order = await this.getOrder(orderId);
-
-    // Validate order is in PACKING status
-    if (order.status !== OrderStatus.PACKING) {
-      throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
-    }
-
-    // Get the order item - explicitly select verified_quantity to ensure it's returned
-    const itemResult = await query(
-      `SELECT order_item_id, order_id, sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason FROM order_items WHERE order_item_id = $1 AND order_id = $2`,
-      [orderItemId, orderId]
-    );
-
-    if (itemResult.rows.length === 0) {
-      throw new NotFoundError('OrderItem', orderItemId);
-    }
-
-    const item = itemResult.rows[0];
-
-    // Check if we're trying to verify more than the quantity
-    // Note: The query client maps snake_case DB columns to camelCase (verified_quantity -> verifiedQuantity)
-    const currentVerified = item.verifiedQuantity || 0;
-    if (currentVerified + quantity > item.quantity) {
-      throw new ConflictError(
-        `Cannot verify more items than ordered (max: ${item.quantity}, already verified: ${currentVerified}, trying to add: ${quantity})`
+    await orderRepository.withTransaction(async client => {
+      const orderResult = await client.query(
+        `SELECT order_id, status
+         FROM orders
+         WHERE order_id = $1
+         FOR UPDATE`,
+        [orderId]
       );
-    }
 
-    // Update verified quantity
-    await query(
-      `UPDATE order_items SET verified_quantity = COALESCE(verified_quantity, 0) + $1 WHERE order_item_id = $2`,
-      [quantity, orderItemId]
-    );
+      if (orderResult.rows.length === 0) {
+        throw new NotFoundError('Order', orderId);
+      }
 
-    // Update order packing progress based on verified items
-    await query(
-      `UPDATE orders SET progress = COALESCE(ROUND(
-        CAST((SELECT COUNT(*) FILTER (WHERE oi.verified_quantity >= oi.quantity) FROM order_items oi WHERE oi.order_id = $1) AS FLOAT)
-        / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
-      ), 0) WHERE order_id = $1`,
-      [orderId]
-    );
+      const order = orderResult.rows[0];
+      if (order.status !== OrderStatus.PACKING) {
+        throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
+      }
+
+      const itemResult = await client.query(
+        `SELECT order_item_id, order_id, sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason
+         FROM order_items
+         WHERE order_item_id = $1 AND order_id = $2
+         FOR UPDATE`,
+        [orderItemId, orderId]
+      );
+
+      if (itemResult.rows.length === 0) {
+        throw new NotFoundError('OrderItem', orderItemId);
+      }
+
+      const item = itemResult.rows[0];
+      const currentVerified = Number(item.verified_quantity ?? item.verifiedQuantity ?? 0);
+      const updatedVerifiedQuantity = currentVerified + quantity;
+
+      if (updatedVerifiedQuantity > Number(item.quantity)) {
+        throw new ConflictError(
+          `Cannot verify more items than ordered (max: ${item.quantity}, already verified: ${currentVerified}, trying to add: ${quantity})`
+        );
+      }
+
+      const updatedStatus = this.derivePickedItemStatus(
+        item.picked_quantity ?? item.pickedQuantity,
+        item.quantity,
+        updatedVerifiedQuantity
+      );
+
+      await client.query(
+        `UPDATE order_items
+         SET verified_quantity = $1,
+             status = $2::order_item_status,
+             skip_reason = NULL
+         WHERE order_item_id = $3`,
+        [updatedVerifiedQuantity, updatedStatus, orderItemId]
+      );
+
+      await this.recalculatePackingProgress(client, orderId);
+    });
 
     logger.info('Packing item verified', { orderId, orderItemId, quantity });
 
@@ -1747,44 +1919,77 @@ export class OrderService {
 
     const order = await this.getOrder(orderId);
 
-    // Validate order is in PACKING status
     if (order.status !== OrderStatus.PACKING) {
       throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
     }
 
-    // Fetch the order item to know its quantity
-    const itemResult = await query(
-      `SELECT order_item_id, quantity, verified_quantity FROM order_items WHERE order_item_id = $1 AND order_id = $2`,
-      [orderItemId, orderId]
-    );
-
-    if (itemResult.rows.length === 0) {
-      throw new NotFoundError('OrderItem', orderItemId);
+    if (skipQuantity !== undefined && skipQuantity !== null) {
+      if (skipQuantity <= 0) {
+        throw new ValidationError('Skip quantity must be greater than 0');
+      }
     }
 
-    const item = itemResult.rows[0] as any;
     await this.markNetSuiteOrderNotReadyToShip(orderId, order as any, reason);
 
-    const totalQty: number = item.quantity;
-    const isPartialSkip =
-      skipQuantity !== undefined && skipQuantity !== null && skipQuantity < totalQty;
+    await orderRepository.withTransaction(async client => {
+      const orderResult = await client.query(
+        `SELECT order_id, status
+         FROM orders
+         WHERE order_id = $1
+         FOR UPDATE`,
+        [orderId]
+      );
 
-    if (isPartialSkip) {
-      // Partial skip: set verified_quantity to the non-backordered portion, still mark SKIPPED
-      const verifiedQuantity = totalQty - skipQuantity!;
-      await query(
+      if (orderResult.rows.length === 0) {
+        throw new NotFoundError('Order', orderId);
+      }
+
+      const lockedOrder = orderResult.rows[0];
+      if (lockedOrder.status !== OrderStatus.PACKING) {
+        throw new ConflictError(
+          `Order is not in PACKING status (current status: ${lockedOrder.status})`
+        );
+      }
+
+      const itemResult = await client.query(
+        `SELECT order_item_id, quantity, picked_quantity, verified_quantity, status, skip_reason
+         FROM order_items
+         WHERE order_item_id = $1 AND order_id = $2
+         FOR UPDATE`,
+        [orderItemId, orderId]
+      );
+
+      if (itemResult.rows.length === 0) {
+        throw new NotFoundError('OrderItem', orderItemId);
+      }
+
+      const item = itemResult.rows[0] as any;
+      const totalQty = Number(item.quantity);
+
+      if (skipQuantity !== undefined && skipQuantity !== null && skipQuantity > totalQty) {
+        throw new ValidationError(`Skip quantity cannot exceed ordered quantity (${totalQty})`);
+      }
+
+      const isPartialSkip =
+        skipQuantity !== undefined && skipQuantity !== null && skipQuantity < totalQty;
+      const verifiedQuantity = isPartialSkip ? totalQty - skipQuantity! : 0;
+      const updatedStatus = this.derivePickedItemStatus(
+        item.picked_quantity ?? item.pickedQuantity,
+        item.quantity,
+        verifiedQuantity
+      );
+
+      await client.query(
         `UPDATE order_items
-           SET status = 'SKIPPED', skip_reason = $1, verified_quantity = $2
-           WHERE order_item_id = $3`,
-        [reason, verifiedQuantity, orderItemId]
+           SET status = $1::order_item_status,
+               skip_reason = $2,
+               verified_quantity = $3
+         WHERE order_item_id = $4`,
+        [updatedStatus, reason, verifiedQuantity, orderItemId]
       );
-    } else {
-      // Full skip: existing behaviour
-      await query(
-        `UPDATE order_items SET status = 'SKIPPED', skip_reason = $1 WHERE order_item_id = $2`,
-        [reason, orderItemId]
-      );
-    }
+
+      await this.recalculatePackingProgress(client, orderId);
+    });
 
     logger.info('Packing item skipped', { orderId, orderItemId, reason, skipQuantity });
 
@@ -1799,66 +2004,74 @@ export class OrderService {
   ): Promise<Order> {
     logger.info('Undoing packing verification', { orderId, orderItemId, quantity, reason });
 
-    const order = await this.getOrder(orderId);
+    await orderRepository.withTransaction(async client => {
+      const orderResult = await client.query(
+        `SELECT order_id, status
+         FROM orders
+         WHERE order_id = $1
+         FOR UPDATE`,
+        [orderId]
+      );
 
-    // Validate order is in PACKING status
-    if (order.status !== OrderStatus.PACKING) {
-      throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
-    }
+      if (orderResult.rows.length === 0) {
+        throw new NotFoundError('Order', orderId);
+      }
 
-    // Get the order item - explicitly select verified_quantity to ensure it's returned
-    const itemResult = await query(
-      `SELECT order_item_id, order_id, sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason FROM order_items WHERE order_item_id = $1 AND order_id = $2`,
-      [orderItemId, orderId]
-    );
+      const order = orderResult.rows[0];
+      if (order.status !== OrderStatus.PACKING) {
+        throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
+      }
 
-    if (itemResult.rows.length === 0) {
-      throw new NotFoundError('OrderItem', orderItemId);
-    }
+      const itemResult = await client.query(
+        `SELECT order_item_id, order_id, sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason
+         FROM order_items
+         WHERE order_item_id = $1 AND order_id = $2
+         FOR UPDATE`,
+        [orderItemId, orderId]
+      );
 
-    const item = itemResult.rows[0];
+      if (itemResult.rows.length === 0) {
+        throw new NotFoundError('OrderItem', orderItemId);
+      }
 
-    // Check if we're trying to undo more than what's verified
-    // Note: The query client maps snake_case DB columns to camelCase (verified_quantity -> verifiedQuantity)
-    const currentVerified = item.verifiedQuantity || 0;
+      const item = itemResult.rows[0];
+      const currentVerified = Number(item.verified_quantity ?? item.verifiedQuantity ?? 0);
 
-    // Detailed logging for debugging
-    logger.info('Undo verification check', {
-      orderItemId,
-      rawVerifiedQuantity: item.verifiedQuantity,
-      currentVerified,
-      quantityToUndo: quantity,
-      itemFullData: item,
+      logger.info('Undo verification check', {
+        orderItemId,
+        rawVerifiedQuantity: item.verifiedQuantity ?? item.verified_quantity,
+        currentVerified,
+        quantityToUndo: quantity,
+        itemFullData: item,
+      });
+
+      if (currentVerified < quantity) {
+        throw new ConflictError(
+          `Cannot undo more items than verified (verified: ${currentVerified}, trying to undo: ${quantity})`
+        );
+      }
+
+      const updatedVerifiedQuantity = Math.max(0, currentVerified - quantity);
+      const existingSkipReason = this.hasSkipReason(item.skip_reason ?? item.skipReason)
+        ? (item.skip_reason ?? item.skipReason)
+        : null;
+      const updatedStatus = this.derivePickedItemStatus(
+        item.picked_quantity ?? item.pickedQuantity,
+        item.quantity,
+        updatedVerifiedQuantity
+      );
+
+      await client.query(
+        `UPDATE order_items
+         SET verified_quantity = $1,
+             status = $2::order_item_status,
+             skip_reason = $3
+         WHERE order_item_id = $4`,
+        [updatedVerifiedQuantity, updatedStatus, existingSkipReason, orderItemId]
+      );
+
+      await this.recalculatePackingProgress(client, orderId);
     });
-
-    if (currentVerified < quantity) {
-      throw new ConflictError(
-        `Cannot undo more items than verified (verified: ${currentVerified}, trying to undo: ${quantity})`
-      );
-    }
-
-    // Update verified quantity
-    await query(
-      `UPDATE order_items SET verified_quantity = GREATEST(0, COALESCE(verified_quantity, 0) - $1) WHERE order_item_id = $2`,
-      [quantity, orderItemId]
-    );
-
-    // If item was skipped, revert the skip
-    if (item.status === 'SKIPPED') {
-      await query(
-        `UPDATE order_items SET status = 'PENDING', skip_reason = NULL WHERE order_item_id = $1`,
-        [orderItemId]
-      );
-    }
-
-    // Update order packing progress based on verified items
-    await query(
-      `UPDATE orders SET progress = COALESCE(ROUND(
-        CAST((SELECT COUNT(*) FILTER (WHERE oi.verified_quantity >= oi.quantity) FROM order_items oi WHERE oi.order_id = $1) AS FLOAT)
-        / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
-      ), 0) WHERE order_id = $1`,
-      [orderId]
-    );
 
     logger.info('Packing verification undone', { orderId, orderItemId, quantity, reason });
 
@@ -1907,7 +2120,8 @@ export class OrderService {
       await client.query(
         `UPDATE orders
          SET status = 'PICKED',
-             packer_id = NULL
+             packer_id = NULL,
+             progress = 0
          WHERE order_id = $1`,
         [orderId]
       );
