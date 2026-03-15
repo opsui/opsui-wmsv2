@@ -4,7 +4,7 @@
  * Handles shipping carriers, shipments, labels, and tracking
  */
 
-import { getPool } from '../db/client';
+import { getDefaultPool, getPool } from '../db/client';
 import { logger } from '../config/logger';
 import { nanoid } from 'nanoid';
 import {
@@ -24,12 +24,95 @@ import {
   NotificationType,
   NotificationPriority,
 } from './NotificationHelper';
+import { NetSuiteClient } from './NetSuiteClient';
 
 // ============================================================================
 // SHIPPING SERVICE
 // ============================================================================
 
 export class ShippingService {
+  private async getNetSuiteClientForOrganization(organizationId: string): Promise<{
+    client: NetSuiteClient;
+    integrationId: string;
+  } | null> {
+    const integrationResult = await getDefaultPool().query(
+      `SELECT
+         i.integration_id,
+         i.configuration
+       FROM integration_organizations io
+       JOIN integrations i ON i.integration_id = io.integration_id
+       WHERE io.organization_id = $1
+         AND i.provider = 'NETSUITE'
+         AND i.enabled = true
+       ORDER BY i.updated_at DESC NULLS LAST, i.created_at DESC
+       LIMIT 1`,
+      [organizationId]
+    );
+
+    if (integrationResult.rows.length === 0) {
+      return null;
+    }
+
+    const integration = integrationResult.rows[0];
+    const authConfig = integration.configuration?.auth || integration.configuration || {};
+
+    return {
+      integrationId: integration.integration_id,
+      client: new NetSuiteClient({
+        accountId: authConfig.accountId,
+        tokenId: authConfig.tokenId,
+        tokenSecret: authConfig.tokenSecret,
+        consumerKey: authConfig.consumerKey,
+        consumerSecret: authConfig.consumerSecret,
+      }),
+    };
+  }
+
+  private async revertNetSuiteShipmentForDeletedConsignment(row: {
+    order_id: string;
+    organization_id: string | null;
+    netsuite_source: string | null;
+    netsuite_if_internal_id: string | null;
+    netsuite_if_tran_id: string | null;
+  }): Promise<void> {
+    if (
+      row.netsuite_source !== 'NETSUITE' ||
+      !row.organization_id ||
+      !row.netsuite_if_internal_id
+    ) {
+      return;
+    }
+
+    const integration = await this.getNetSuiteClientForOrganization(row.organization_id);
+    if (!integration) {
+      throw new Error(
+        `No enabled NetSuite integration found to revert fulfillment for order ${row.order_id}`
+      );
+    }
+
+    await integration.client.revertItemFulfillmentShipment(row.netsuite_if_internal_id, {
+      shipStatus: '_packed',
+    });
+
+    logger.info('Reverted NetSuite fulfillment shipment after deleted NZC consignment', {
+      orderId: row.order_id,
+      integrationId: integration.integrationId,
+      netsuiteIfInternalId: row.netsuite_if_internal_id,
+      netsuiteIfTranId: row.netsuite_if_tran_id,
+    });
+  }
+
+  private parseTrackingTokens(value: string | null | undefined): string[] {
+    if (!value) {
+      return [];
+    }
+
+    return value
+      .split(',')
+      .map(token => token.trim())
+      .filter(Boolean);
+  }
+
   private async resolveCarrierIdForShipment(
     client: Awaited<ReturnType<typeof getPool>>,
     carrierId: string
@@ -693,6 +776,129 @@ export class ShippingService {
 
     logger.info('Tracking number added', { shipmentId, trackingNumber });
     return await this.getShipment(shipmentId);
+  }
+
+  async reconcileDeletedNZCConsignment(connote: string): Promise<{
+    reconciled: boolean;
+    affectedOrderIds: string[];
+    affectedShipmentIds: string[];
+  }> {
+    const normalizedConnote = String(connote || '').trim();
+    if (!normalizedConnote) {
+      return {
+        reconciled: false,
+        affectedOrderIds: [],
+        affectedShipmentIds: [],
+      };
+    }
+
+    const client = await getPool();
+
+    try {
+      await client.query('BEGIN');
+
+      const candidateResult = await client.query<
+        Record<string, string | null> & {
+          order_id: string;
+          organization_id: string | null;
+          netsuite_source: string | null;
+          netsuite_if_internal_id: string | null;
+          netsuite_if_tran_id: string | null;
+          shipment_id: string | null;
+        }
+      >(
+        `SELECT
+           o.order_id,
+           o.organization_id,
+           o.netsuite_source,
+           o.netsuite_if_internal_id,
+           o.netsuite_if_tran_id,
+           o.tracking_number AS order_tracking_number,
+           s.shipment_id,
+           s.tracking_number AS shipment_tracking_number
+         FROM orders o
+         LEFT JOIN shipments s ON s.order_id = o.order_id
+         WHERE o.status = 'SHIPPED'
+           AND (
+             COALESCE(o.tracking_number, '') ILIKE $1
+             OR COALESCE(s.tracking_number, '') ILIKE $1
+           )
+         FOR UPDATE OF o`,
+        [`%${normalizedConnote}%`]
+      );
+
+      const affectedOrderIds = new Set<string>();
+      const affectedShipmentIds = new Set<string>();
+
+      for (const row of candidateResult.rows) {
+        const orderTokens = this.parseTrackingTokens(row.order_tracking_number);
+        const shipmentTokens = this.parseTrackingTokens(row.shipment_tracking_number);
+        const allTokens = Array.from(new Set([...orderTokens, ...shipmentTokens]));
+
+        if (!allTokens.includes(normalizedConnote)) {
+          continue;
+        }
+
+        await this.revertNetSuiteShipmentForDeletedConsignment(row);
+
+        const remainingTokens = allTokens.filter(token => token !== normalizedConnote);
+        const nextTrackingNumber = remainingTokens.length > 0 ? remainingTokens.join(', ') : null;
+
+        await client.query(
+          `UPDATE orders
+           SET status = 'PACKED'::order_status,
+               shipped_at = NULL,
+               tracking_number = $2,
+               updated_at = NOW(),
+               progress = 100
+           WHERE order_id = $1`,
+          [row.order_id, nextTrackingNumber]
+        );
+
+        affectedOrderIds.add(row.order_id);
+
+        if (row.shipment_id) {
+          await client.query(
+            `UPDATE shipments
+             SET status = $2,
+                 shipped_at = NULL,
+                 shipped_by = NULL,
+                 tracking_number = $3,
+                 tracking_url = NULL,
+                 updated_at = NOW()
+             WHERE shipment_id = $1`,
+            [row.shipment_id, ShipmentStatus.LABEL_CREATED, nextTrackingNumber]
+          );
+
+          affectedShipmentIds.add(row.shipment_id);
+        }
+      }
+
+      await client.query('COMMIT');
+
+      const result = {
+        reconciled: affectedOrderIds.size > 0,
+        affectedOrderIds: Array.from(affectedOrderIds),
+        affectedShipmentIds: Array.from(affectedShipmentIds),
+      };
+
+      if (result.reconciled) {
+        logger.warn('Reconciled deleted NZC consignment back out of shipped orders', {
+          connote: normalizedConnote,
+          affectedOrderIds: result.affectedOrderIds,
+          affectedShipmentIds: result.affectedShipmentIds,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      logger.error('Error reconciling deleted NZC consignment', {
+        connote: normalizedConnote,
+        error,
+      });
+      throw error;
+    }
   }
 
   // ==========================================================================

@@ -752,6 +752,89 @@ describe('ShippingService', () => {
     });
   });
 
+  describe('reconcileDeletedNZCConsignment', () => {
+    it('should move a shipped order back to packed when its NZC connote is deleted', async () => {
+      const netsuiteRollbackSpy = jest
+        .spyOn(service as any, 'revertNetSuiteShipmentForDeletedConsignment')
+        .mockResolvedValue(undefined);
+
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              order_id: 'SO-123',
+              organization_id: 'ORG-1',
+              netsuite_source: 'NETSUITE',
+              netsuite_if_internal_id: 'IF-123',
+              netsuite_if_tran_id: 'IFTRN-123',
+              order_tracking_number: 'BYAF038655',
+              shipment_id: 'SHP-123',
+              shipment_tracking_number: 'BYAF038655',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [] }) // update orders
+        .mockResolvedValueOnce({ rows: [] }) // update shipments
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
+
+      const result = await service.reconcileDeletedNZCConsignment('BYAF038655');
+
+      expect(result).toEqual({
+        reconciled: true,
+        affectedOrderIds: ['SO-123'],
+        affectedShipmentIds: ['SHP-123'],
+      });
+      expect(netsuiteRollbackSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order_id: 'SO-123',
+          netsuite_if_internal_id: 'IF-123',
+        })
+      );
+      expect(global.mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining(`status = 'PACKED'::order_status`),
+        ['SO-123', null]
+      );
+      expect(global.mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET status = $2'),
+        ['SHP-123', ShipmentStatus.LABEL_CREATED, null]
+      );
+    });
+
+    it('should leave shipped orders alone when the connote is not attached', async () => {
+      const netsuiteRollbackSpy = jest
+        .spyOn(service as any, 'revertNetSuiteShipmentForDeletedConsignment')
+        .mockResolvedValue(undefined);
+
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              order_id: 'SO-123',
+              organization_id: 'ORG-1',
+              netsuite_source: 'NETSUITE',
+              netsuite_if_internal_id: 'IF-123',
+              netsuite_if_tran_id: 'IFTRN-123',
+              order_tracking_number: 'BYAF038656',
+              shipment_id: 'SHP-123',
+              shipment_tracking_number: 'BYAF038656',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
+
+      const result = await service.reconcileDeletedNZCConsignment('BYAF038655');
+
+      expect(result).toEqual({
+        reconciled: false,
+        affectedOrderIds: [],
+        affectedShipmentIds: [],
+      });
+      expect(netsuiteRollbackSpy).not.toHaveBeenCalled();
+    });
+  });
+
   // ==========================================================================
   // SHIPPING LABEL METHODS
   // ==========================================================================

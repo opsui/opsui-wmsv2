@@ -6,6 +6,7 @@
 import request from 'supertest';
 import { createApp } from '../../app';
 import { nzcService } from '../../services/NZCService';
+import { shippingService } from '../../services/ShippingService';
 import { UserRole } from '@opsui/shared';
 
 // Mock all dependencies
@@ -28,6 +29,7 @@ jest.mock('../../middleware/auth', () => ({
 
 jest.mock('../../services/NZCService', () => ({
   nzcService: {
+    isConfigured: jest.fn().mockReturnValue(true),
     getRates: jest.fn().mockResolvedValue({
       success: true,
       quotes: [
@@ -61,6 +63,13 @@ jest.mock('../../services/NZCService', () => ({
       contentType: 'image/png',
       data: 'base64encodedimage...',
     }),
+    getTracking: jest.fn().mockResolvedValue([
+      {
+        ConsignmentNo: 'CON123456',
+        Status: 'In Transit',
+        Events: [],
+      },
+    ]),
     reprintLabel: jest.fn().mockResolvedValue(undefined),
     getPrinters: jest.fn().mockResolvedValue([
       {
@@ -88,6 +97,16 @@ jest.mock('../../services/NZCService', () => ({
         width: 210,
       },
     ]),
+  },
+}));
+
+jest.mock('../../services/ShippingService', () => ({
+  shippingService: {
+    reconcileDeletedNZCConsignment: jest.fn().mockResolvedValue({
+      reconciled: true,
+      affectedOrderIds: ['SO-123'],
+      affectedShipmentIds: ['SHP-123'],
+    }),
   },
 }));
 
@@ -304,6 +323,46 @@ describe('NZC Routes', () => {
         .expect(200);
 
       expect(nzcService.getLabel).toHaveBeenCalledWith('CON123456', 'LABEL_PDF');
+    });
+  });
+
+  // ==========================================================================
+  // GET /api/v1/nzc/tracking/:connote
+  // ==========================================================================
+
+  describe('GET /api/v1/nzc/tracking/:connote', () => {
+    it('should return tracking results', async () => {
+      const response = await request(app)
+        .get('/api/v1/nzc/tracking/CON123456')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        status: 'ok',
+        connote: 'CON123456',
+      });
+      expect(Array.isArray(response.body.results)).toBe(true);
+      expect(nzcService.getTracking).toHaveBeenCalledWith('CON123456');
+    });
+
+    it('should reconcile shipped orders when NZC tracking returns 404', async () => {
+      (nzcService.getTracking as jest.Mock).mockRejectedValueOnce(
+        new Error('NZC API error: 404 Not Found')
+      );
+
+      const response = await request(app)
+        .get('/api/v1/nzc/tracking/CON404')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(shippingService.reconcileDeletedNZCConsignment).toHaveBeenCalledWith('CON404');
+      expect(response.body).toMatchObject({
+        status: 'consignment_deleted',
+        connote: 'CON404',
+        removedFromShippedOrders: true,
+        affectedOrderIds: ['SO-123'],
+        affectedShipmentIds: ['SHP-123'],
+      });
     });
   });
 

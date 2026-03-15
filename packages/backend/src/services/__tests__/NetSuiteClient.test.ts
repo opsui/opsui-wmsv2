@@ -221,6 +221,39 @@ describe('NetSuiteClient', () => {
     );
   });
 
+  it('reverts item fulfillments back to packed and clears package tracking', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <getResponse>
+          <platformCore:status isSuccess="true" />
+          <record xsi:type="tranSales:ItemFulfillment" internalId="1609999">
+            <tranSales:shipStatus>_shipped</tranSales:shipStatus>
+            <tranSales:packageList replaceAll="false">
+              <tranSales:package>
+                <tranSales:packageDescr>NZ Couriers</tranSales:packageDescr>
+                <tranSales:packageTrackingNumber>BYAF038638</tranSales:packageTrackingNumber>
+              </tranSales:package>
+            </tranSales:packageList>
+          </record>
+        </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <updateResponse>
+          <platformCore:status isSuccess="true" />
+        </updateResponse>`);
+
+    await client.revertItemFulfillmentShipment('1609999', {
+      shipStatus: '_packed',
+    });
+
+    const [, updateEnvelope] = soapRequest.mock.calls[1];
+    expect(updateEnvelope).toContain('<tranSales:shipStatus>_packed</tranSales:shipStatus>');
+    expect(updateEnvelope).toContain(
+      '<tranSales:packageList replaceAll="true"></tranSales:packageList>'
+    );
+    expect(updateEnvelope).not.toContain('BYAF038638');
+  });
+
   it('updates ready to ship using a NetSuite custom body field', async () => {
     const client = new NetSuiteClient(credentials);
     const soapRequest = jest.spyOn(client as any, 'soapRequest')
@@ -244,7 +277,7 @@ describe('NetSuiteClient', () => {
       memo: 'Backordered line skipped',
     });
 
-    const [, updateEnvelope] = soapRequest.mock.calls[0];
+    const [, updateEnvelope] = soapRequest.mock.calls[1];
     expect(updateEnvelope).toContain('<tranSales:memo>Backordered line skipped</tranSales:memo>');
     expect(updateEnvelope).toContain('<tranSales:customFieldList>');
     expect(updateEnvelope).toContain(

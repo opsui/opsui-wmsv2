@@ -15,7 +15,7 @@
  * ============================================================================
  */
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   TruckIcon,
   DocumentArrowDownIcon,
@@ -32,7 +32,7 @@ import {
   CubeIcon,
   TagIcon,
 } from '@heroicons/react/24/outline';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FulfillmentPackingSlip,
   FULFILLMENT_SLIP_PRINT_STYLES,
@@ -265,11 +265,37 @@ function DocumentBlock({
 // TRACKING PANEL
 // ============================================================================
 
-function TrackingPanel({ connote }: { connote: string }) {
+function TrackingPanel({
+  connote,
+  onConsignmentDeleted,
+}: {
+  connote: string;
+  onConsignmentDeleted?: (data: {
+    status: 'ok' | 'consignment_deleted' | 'not_found';
+    connote: string;
+    results: any[];
+    removedFromShippedOrders?: boolean;
+    affectedOrderIds?: string[];
+    affectedShipmentIds?: string[];
+    message?: string;
+  }) => void;
+}) {
   const { data, isLoading, isError } = useNZCTracking(connote);
-  const results: any[] = data?.data ?? [];
+  const results: any[] = data?.results ?? [];
   const events: any[] = results[0]?.Events ?? [];
-  const status: string = results[0]?.Status ?? '';
+  const status: string =
+    data?.status === 'consignment_deleted'
+      ? data.message ||
+        'This NZC consignment was deleted and the order was removed from shipped orders.'
+      : data?.status === 'not_found'
+        ? 'Tracking unavailable'
+        : (results[0]?.Status ?? '');
+
+  useEffect(() => {
+    if (data?.status === 'consignment_deleted' && data.removedFromShippedOrders) {
+      onConsignmentDeleted?.(data);
+    }
+  }, [data, onConsignmentDeleted]);
 
   if (isLoading) {
     return <p className="shipping-history-status text-xs opacity-60">Loading tracking…</p>;
@@ -315,6 +341,7 @@ function TrackingPanel({ connote }: { connote: string }) {
 // ============================================================================
 
 export function ShippedOrdersPage() {
+  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -322,6 +349,7 @@ export function ShippedOrdersPage() {
   const [isPackingSlipOpen, setIsPackingSlipOpen] = useState(false);
   const [isNzcLabelOpen, setIsNzcLabelOpen] = useState(false);
   const [reprintingConnotes, setReprintingConnotes] = useState<Record<string, boolean>>({});
+  const handledDeletedConnotesRef = useRef<Set<string>>(new Set());
 
   const { data: shippedData, isLoading: loading } = useShippedOrders({ limit: 100 });
   const apiResponse = shippedData?.data;
@@ -367,6 +395,12 @@ export function ShippedOrdersPage() {
     setIsPackingSlipOpen(false);
     setIsNzcLabelOpen(false);
   }, [selectedOrder?.id]);
+
+  useEffect(() => {
+    if (selectedOrder && !orders.some(order => order.id === selectedOrder.id)) {
+      setSelectedOrder(null);
+    }
+  }, [orders, selectedOrder]);
 
   const selectedOrderId = selectedOrder?.orderNumber || '';
   const selectedConnotes = useMemo(
@@ -488,6 +522,37 @@ export function ShippedOrdersPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handleDeletedConsignment = (data: {
+    connote: string;
+    affectedOrderIds?: string[];
+    message?: string;
+  }) => {
+    if (handledDeletedConnotesRef.current.has(data.connote)) {
+      return;
+    }
+
+    handledDeletedConnotesRef.current.add(data.connote);
+    queryClient.invalidateQueries({ queryKey: ['orders', 'shipped'] });
+
+    for (const orderId of data.affectedOrderIds || []) {
+      queryClient.invalidateQueries({ queryKey: ['orders', 'detail', orderId] });
+    }
+
+    if (
+      selectedOrder &&
+      ((data.affectedOrderIds || []).includes(selectedOrder.orderNumber) ||
+        parseShipmentConnotes(selectedOrder.trackingNumber).includes(data.connote))
+    ) {
+      setSelectedOrder(null);
+    }
+
+    showToast(
+      data.message ||
+        `NZC consignment ${data.connote} was deleted. The order was removed from shipped orders.`,
+      'warning'
+    );
   };
 
   const handleExport = async () => {
@@ -840,6 +905,7 @@ export function ShippedOrdersPage() {
                                 parseShipmentConnotes(order.trackingNumber)[0] ||
                                 order.trackingNumber
                               }
+                              onConsignmentDeleted={handleDeletedConsignment}
                             />
                           ) : (
                             <p className="shipping-history-status text-xs opacity-60">

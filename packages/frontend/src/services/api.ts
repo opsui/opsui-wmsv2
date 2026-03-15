@@ -5475,6 +5475,32 @@ export const nzcApi = {
   },
 
   /**
+   * Get tracking data or a reconciliation signal for a deleted NZC consignment
+   */
+  getTracking: async (
+    connote: string
+  ): Promise<{
+    status: 'ok' | 'consignment_deleted' | 'not_found';
+    connote: string;
+    results: any[];
+    removedFromShippedOrders?: boolean;
+    affectedOrderIds?: string[];
+    affectedShipmentIds?: string[];
+    message?: string;
+  }> => {
+    const response = await apiClient.get<{
+      status: 'ok' | 'consignment_deleted' | 'not_found';
+      connote: string;
+      results: any[];
+      removedFromShippedOrders?: boolean;
+      affectedOrderIds?: string[];
+      affectedShipmentIds?: string[];
+      message?: string;
+    }>(`/nzc/tracking/${encodeURIComponent(connote)}`);
+    return response.data;
+  },
+
+  /**
    * Reprint a shipping label (sends to printer)
    */
   reprintLabel: async (
@@ -5561,7 +5587,7 @@ export const useNZCReprintLabel = () => {
 export const useNZCTracking = (connote: string | null, enabled = true) => {
   return useQuery({
     queryKey: ['nzc', 'tracking', connote],
-    queryFn: () => apiClient.get(`/nzc/tracking/${encodeURIComponent(connote!)}`),
+    queryFn: () => nzcApi.getTracking(connote!),
     enabled: enabled && !!connote,
     staleTime: 60 * 1000, // 1 minute
     retry: 1,

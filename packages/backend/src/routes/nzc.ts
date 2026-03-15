@@ -6,6 +6,7 @@
 
 import { Router } from 'express';
 import { nzcService } from '../services/NZCService';
+import { shippingService } from '../services/ShippingService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UserRole } from '@opsui/shared';
@@ -52,8 +53,35 @@ router.use(
       return;
     }
 
-    const result = await nzcService.getTracking(connote);
-    res.json(result);
+    try {
+      const result = await nzcService.getTracking(connote);
+      res.json({
+        status: 'ok',
+        connote,
+        results: result,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (message.includes('NZC API error: 404')) {
+        const reconciliation = await shippingService.reconcileDeletedNZCConsignment(connote);
+
+        res.json({
+          status: reconciliation.reconciled ? 'consignment_deleted' : 'not_found',
+          connote,
+          results: [],
+          removedFromShippedOrders: reconciliation.reconciled,
+          affectedOrderIds: reconciliation.affectedOrderIds,
+          affectedShipmentIds: reconciliation.affectedShipmentIds,
+          message: reconciliation.reconciled
+            ? 'NZC consignment was deleted and the linked order was moved out of shipped orders.'
+            : 'NZC consignment was not found.',
+        });
+        return;
+      }
+
+      throw error;
+    }
   })
 );
 

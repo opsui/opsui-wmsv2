@@ -1314,6 +1314,49 @@ export class NetSuiteClient {
     }
 
     const updatedRecord = this.applyShipmentDetailsToFulfillmentRecord(recordXml, shipmentData);
+    await this.updateItemFulfillmentRecord(itemFulfillmentId, updatedRecord);
+  }
+
+  async revertItemFulfillmentShipment(
+    itemFulfillmentId: string,
+    options?: { shipStatus?: '_picked' | '_packed' }
+  ): Promise<void> {
+    const body = [
+      '<tns:get>',
+      '  <tns:baseRef xsi:type="platformCore:RecordRef"',
+      `    type="itemFulfillment" internalId="${this.escapeXml(itemFulfillmentId)}"/>`,
+      '</tns:get>',
+    ].join('\n');
+
+    const envelope = this.buildEnvelope('', body);
+    const response = await this.soapRequest('get', envelope);
+
+    if (!response.includes('isSuccess="true"')) {
+      const fault =
+        this.extractTag(response, 'faultstring') || this.extractTag(response, 'message');
+      throw new Error(
+        `Failed to fetch item fulfillment ${itemFulfillmentId} for shipment rollback: ${fault || 'Unknown error'}`
+      );
+    }
+
+    const recordXml = this.extractInitializedFulfillmentRecord(response);
+    if (!recordXml) {
+      throw new Error(
+        `Failed to revert item fulfillment ${itemFulfillmentId}: missing record payload`
+      );
+    }
+
+    const updatedRecord = this.applyShipmentRollbackToFulfillmentRecord(
+      recordXml,
+      options?.shipStatus || '_packed'
+    );
+    await this.updateItemFulfillmentRecord(itemFulfillmentId, updatedRecord);
+  }
+
+  private async updateItemFulfillmentRecord(
+    itemFulfillmentId: string,
+    updatedRecord: string
+  ): Promise<void> {
     const updateBody = ['<tns:update>', `  ${updatedRecord}`, '</tns:update>'].join('\n');
     const updateEnvelope = this.buildEnvelope('', updateBody);
     const updateResponse = await this.soapRequest('update', updateEnvelope);
@@ -1383,6 +1426,39 @@ export class NetSuiteClient {
       updatedRecord = updatedRecord.replace(
         /<\/record>/,
         `<tranSales:packageList replaceAll="false">${packagePayload}</tranSales:packageList></record>`
+      );
+    }
+
+    return updatedRecord;
+  }
+
+  private applyShipmentRollbackToFulfillmentRecord(
+    recordXml: string,
+    shipStatus: '_picked' | '_packed'
+  ): string {
+    let updatedRecord = recordXml;
+
+    if (updatedRecord.includes('<tranSales:shipStatus>')) {
+      updatedRecord = updatedRecord.replace(
+        /<tranSales:shipStatus>[\s\S]*?<\/tranSales:shipStatus>/,
+        `<tranSales:shipStatus>${shipStatus}</tranSales:shipStatus>`
+      );
+    } else {
+      updatedRecord = updatedRecord.replace(
+        /<\/record>/,
+        `<tranSales:shipStatus>${shipStatus}</tranSales:shipStatus></record>`
+      );
+    }
+
+    if (updatedRecord.includes('<tranSales:packageList')) {
+      updatedRecord = updatedRecord.replace(
+        /<tranSales:packageList[\s\S]*?<\/tranSales:packageList>/,
+        '<tranSales:packageList replaceAll="true"></tranSales:packageList>'
+      );
+    } else {
+      updatedRecord = updatedRecord.replace(
+        /<\/record>/,
+        '<tranSales:packageList replaceAll="true"></tranSales:packageList></record>'
       );
     }
 
