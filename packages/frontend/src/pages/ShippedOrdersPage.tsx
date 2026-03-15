@@ -49,17 +49,19 @@ interface ShippedOrder {
   estimatedDelivery: string;
   status: 'in_transit' | 'out_for_delivery' | 'delivered' | 'exception';
   items: number;
-  destination: string;
+  destination: { company?: string; address: string; phone?: string };
 }
 
-function formatAddress(raw: string | null | undefined): string {
-  if (!raw) return '—';
+function parseDestination(raw: string | null | undefined): ShippedOrder['destination'] {
+  if (!raw) return { address: '—' };
   try {
     const a = JSON.parse(raw);
-    const parts = [a.addressLine1, a.addressLine2, a.city, a.postalCode].filter(Boolean);
-    return parts.join(', ') || '—';
+    const addressParts = [a.addressLine1, a.addressLine2, a.city, a.postalCode].filter(Boolean);
+    const company = a.company && a.company !== '-' ? a.company : undefined;
+    const phone = a.phone && a.phone.replace(/-/g, '').trim() ? a.phone : undefined;
+    return { company, address: addressParts.join(', ') || '—', phone };
   } catch {
-    return raw;
+    return { address: raw };
   }
 }
 
@@ -137,7 +139,7 @@ export function ShippedOrdersPage() {
       estimatedDelivery: o.deliveredAt || o.shippedAt,
       status: (o.deliveredAt ? 'delivered' : 'in_transit') as ShippedOrder['status'],
       items: o.itemCount,
-      destination: formatAddress(o.shippingAddress),
+      destination: parseDestination(o.shippingAddress),
     }));
   }, [apiResponse]);
 
@@ -343,9 +345,17 @@ export function ShippedOrdersPage() {
                     </div>
 
                     <div className="shipping-detail-row">
-                      <div className="shipping-detail-item">
-                        <MapPinIcon className="h-4 w-4" />
-                        <span>{order.destination}</span>
+                      <div className="shipping-detail-item" style={{ alignItems: 'flex-start' }}>
+                        <MapPinIcon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <div className="flex flex-col gap-0.5">
+                          {order.destination.company && (
+                            <span className="font-medium">{order.destination.company}</span>
+                          )}
+                          <span>{order.destination.address}</span>
+                          {order.destination.phone && (
+                            <span className="opacity-60 text-xs">{order.destination.phone}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
