@@ -32,6 +32,7 @@ import {
 import { ResponsiveContainer } from '@/components/shared/ResponsiveContainer';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
 import {
@@ -343,6 +344,7 @@ export function PickingPage() {
   const currentUser = useAuthStore(state => state.user);
   const userRole = useAuthStore(state => state.user.role);
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
 
   // Track current page for admin dashboard
   usePageTracking({ view: orderId ? PageViews.PICKING(orderId) : 'Picking' });
@@ -1107,6 +1109,7 @@ export function PickingPage() {
             } else if (item.pickedQuantity >= item.quantity) {
               setScanError(`Item already fully picked: ${getOrderItemDisplayName(item)}`);
             }
+            playError();
             showToast('Item already processed', 'warning');
             return;
           }
@@ -1116,6 +1119,7 @@ export function PickingPage() {
       setScanError(
         `Invalid scan: "${scanValueTrimmed}" does not match any unpicked item in this order.`
       );
+      playError();
       showToast('Invalid barcode or SKU', 'error');
       return;
     }
@@ -1125,6 +1129,7 @@ export function PickingPage() {
     // Check for over-scanning
     if (matchedItem.pickedQuantity >= matchedItem.quantity) {
       setScanError(`Item already fully picked: ${getOrderItemDisplayName(matchedItem)}`);
+      playError();
       showToast('Item already fully picked', 'warning');
       return;
     }
@@ -1149,6 +1154,7 @@ export function PickingPage() {
       // Show success feedback
       setScanSuccess(true);
       setTimeout(() => setScanSuccess(false), 600);
+      playSuccess();
 
       showToast(`${getOrderItemDisplayName(matchedItem)} picked!`, 'success');
 
@@ -1156,6 +1162,7 @@ export function PickingPage() {
       await refetch();
     } catch (error) {
       setScanError(error instanceof Error ? error.message : 'Pick failed');
+      playError();
       showToast(error instanceof Error ? error.message : 'Failed to pick item', 'error');
     }
 

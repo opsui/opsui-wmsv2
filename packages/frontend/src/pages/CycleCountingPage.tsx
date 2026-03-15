@@ -50,6 +50,7 @@ import {
 } from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 
 // ============================================================================
 // COMPONENTS
@@ -185,6 +186,7 @@ function CreateCycleCountModal({
 }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const createMutation = useCreateCycleCountPlan();
   const [skuSearch, setSkuSearch] = useState('');
 
@@ -301,11 +303,13 @@ function CreateCycleCountModal({
           notes: values.notes,
           countBy: values.assignedTo,
         });
+        playSuccess();
         showToast('Cycle count plan created successfully', 'success');
         onSuccess();
         onClose();
       } catch (error: any) {
         console.error('Failed to create cycle count plan:', error);
+        playError();
         showToast(error?.message || 'Failed to create plan', 'error');
         throw error;
       }

@@ -58,6 +58,7 @@ import { useToast } from '@/components/shared';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/shared/ResponsiveContainer';
 import { useAuthStore } from '@/stores';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { useInventoryUpdates, useNotifications } from '@/hooks/useWebSocket';
 import {
   CubeIcon,
@@ -179,6 +180,7 @@ function MetricCard({
 
 function TransferModal({ onClose }: { onClose: () => void }) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const transferStock = useTransferStock();
 
   // Form validation
@@ -243,10 +245,12 @@ function TransferModal({ onClose }: { onClose: () => void }) {
           quantity: parseInt(values.quantity),
           reason: values.reason,
         });
+        playSuccess();
         showToast('Stock transferred successfully', 'success');
         onClose();
       } catch (error: any) {
         console.error('Transfer failed:', error);
+        playError();
         showToast(error?.message || 'Transfer failed', 'error');
         throw error;
       }
@@ -371,6 +375,7 @@ function TransferModal({ onClose }: { onClose: () => void }) {
 
 function AdjustmentModal({ onClose }: { onClose: () => void }) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const adjustInventory = useAdjustInventory();
 
   // Form validation
@@ -424,10 +429,12 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
           quantity: parseInt(values.quantity),
           reason: values.reason,
         });
+        playSuccess();
         showToast('Inventory adjusted successfully', 'success');
         onClose();
       } catch (error: any) {
         console.error('Adjustment failed:', error);
+        playError();
         showToast(error?.message || 'Adjustment failed', 'error');
         throw error;
       }
@@ -538,6 +545,7 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
 
 function StockCountModal({ onClose }: { onClose: () => void }) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const createStockCount = useCreateStockCount();
 
   // Form validation
@@ -570,10 +578,12 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
     onSubmit: async values => {
       try {
         await createStockCount.mutateAsync({ binLocation: values.binLocation, type: values.type });
+        playSuccess();
         showToast('Stock count created successfully', 'success');
         onClose();
       } catch (error: any) {
         console.error('Stock count creation failed:', error);
+        playError();
         showToast(error?.message || 'Failed to create stock count', 'error');
         throw error;
       }

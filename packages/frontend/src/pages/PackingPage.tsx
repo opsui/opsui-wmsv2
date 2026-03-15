@@ -21,6 +21,7 @@ import {
   useToast,
 } from '@/components/shared';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
 import {
@@ -255,6 +256,7 @@ export function PackingPage() {
   const currentUser = useAuthStore(state => state.user);
   const userRole = useAuthStore(state => state.user?.role);
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
 
   // Track current page for admin dashboard
   usePageTracking({ view: orderId ? `Packing ${orderId}` : 'Packing' });
@@ -1416,6 +1418,7 @@ export function PackingPage() {
             } else if ((item.verifiedQuantity || 0) >= item.quantity) {
               setScanError(`Item already fully verified: ${getOrderItemDisplayName(item)}`);
             }
+            playError();
             showToast('Item already processed', 'warning');
             return;
           }
@@ -1425,6 +1428,7 @@ export function PackingPage() {
       setScanError(
         `Invalid scan: "${scanValueTrimmed}" does not match any unverified item in this order.`
       );
+      playError();
       showToast('Invalid barcode or SKU', 'error');
       return;
     }
@@ -1435,6 +1439,7 @@ export function PackingPage() {
     const currentVerified = matchedItem.verifiedQuantity || 0;
     if (currentVerified >= matchedItem.quantity) {
       setScanError(`Item already fully verified: ${getOrderItemDisplayName(matchedItem)}`);
+      playError();
       showToast('Item already fully verified', 'warning');
       return;
     }
@@ -1493,6 +1498,7 @@ export function PackingPage() {
       // Show success feedback
       setScanSuccess(true);
       setTimeout(() => setScanSuccess(false), 600);
+      playSuccess();
 
       showToast(`${matchedItem.name} verified!`, 'success');
       setScanValue('');
@@ -1529,6 +1535,7 @@ export function PackingPage() {
       }
     } catch (error) {
       setScanError(error instanceof Error ? error.message : 'Verification failed');
+      playError();
       showToast(error instanceof Error ? error.message : 'Failed to verify item', 'error');
     } finally {
       setIsVerifying(false);

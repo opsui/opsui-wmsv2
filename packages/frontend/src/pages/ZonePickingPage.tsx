@@ -22,6 +22,7 @@ import {
 import { useZones, useAllZoneStats, useZonePickTasks, useRebalancePickers } from '@/services/api';
 import { useAuthStore } from '@/stores';
 
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
 import {
   MapIcon,
@@ -38,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 
 export function ZonePickingPage() {
   const { showToast } = useToast();
+  const { playSuccess } = useFeedbackSounds();
   const navigate = useNavigate();
   usePageTracking({ view: PageViews.ZONE_PICKING });
 
@@ -79,6 +81,7 @@ export function ZonePickingPage() {
   const handleRebalance = async () => {
     try {
       await rebalanceMutation.mutateAsync();
+      playSuccess();
       showToast('Pickers rebalanced successfully', 'success');
     } catch (error) {
       // Error is handled by the mutation

@@ -55,6 +55,7 @@ import {
 } from '@/components/shared';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/shared/ResponsiveContainer';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import {
   InboxIcon,
   TruckIcon,
@@ -760,6 +761,7 @@ function ExceptionCard({
 
 function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const createASN = useCreateASN();
 
   const {
@@ -802,11 +804,13 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
           shipmentNotes: '',
           lineItems: [{ sku: 'SKU-001', expectedQuantity: 1, unitCost: 0 }],
         });
+        playSuccess();
         showToast('ASN created successfully', 'success');
         onSuccess();
         onClose();
       } catch (error: any) {
         console.error('Failed to create ASN:', error);
+        playError();
         showToast(error?.message || 'Failed to create ASN', 'error');
         throw error;
       }
@@ -917,6 +921,7 @@ function CreateReceiptModal({
   onSuccess: () => void;
 }) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const createReceipt = useCreateReceipt();
 
   const {
@@ -941,11 +946,13 @@ function CreateReceiptModal({
             { sku: 'SKU-001', quantityOrdered: 10, quantityReceived: 10, quantityDamaged: 0 },
           ],
         });
+        playSuccess();
         showToast('Receipt created successfully', 'success');
         onSuccess();
         onClose();
       } catch (error: any) {
         console.error('Failed to create receipt:', error);
+        playError();
         showToast(error?.message || 'Failed to create receipt', 'error');
         throw error;
       }
@@ -1016,6 +1023,7 @@ function UpdatePutawayTaskModal({
   onSuccess: () => void;
 }) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const updatePutawayTask = useUpdatePutawayTask();
 
   const remaining = task.quantityToPutaway - task.quantityPutaway;
@@ -1055,11 +1063,13 @@ function UpdatePutawayTaskModal({
               qty >= task.quantityToPutaway ? PutawayStatus.COMPLETED : PutawayStatus.IN_PROGRESS,
           },
         });
+        playSuccess();
         showToast('Putaway task updated successfully', 'success');
         onSuccess();
         onClose();
       } catch (error: any) {
         console.error('Failed to update putaway task:', error);
+        playError();
         showToast(error?.message || 'Failed to update putaway task', 'error');
         throw error;
       }
@@ -1155,6 +1165,7 @@ function UpdatePutawayTaskModal({
 
 function InwardsGoodsPage() {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentStage = (searchParams.get('tab') as TabStage) || 'overview';
   const navigate = useNavigate();
@@ -1283,11 +1294,13 @@ function InwardsGoodsPage() {
 
     try {
       await updateASNStatus.mutateAsync({ asnId: pendingAsnId, status: ASNStatus.RECEIVED });
+      playSuccess();
       showToast('ASN marked as received', 'success');
       setReceiptModalOpen(true);
       refetchAsns();
     } catch (error: any) {
       console.error('Failed to update ASN status:', error);
+      playError();
       showToast(error?.message || 'Failed to update ASN status', 'error');
     } finally {
       setConfirmDialogOpen(false);

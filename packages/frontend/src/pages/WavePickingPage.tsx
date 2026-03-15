@@ -30,7 +30,7 @@ import {
 } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import { useFormValidation } from '@/hooks/useFormValidation';
-
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
 import {
   Squares2X2Icon,
@@ -271,6 +271,7 @@ function WaveStat({
 
 export function WavePickingPage() {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const navigate = useNavigate();
   usePageTracking({ view: PageViews.WAVE_PICKING });
 
@@ -318,10 +319,12 @@ export function WavePickingPage() {
     onSubmit: async values => {
       try {
         await createWaveMutation.mutateAsync(values);
+        playSuccess();
         showToast('Wave created successfully', 'success');
         setFieldValue('strategy', 'BALANCED');
         setFieldValue('maxOrders', 50);
       } catch (error: any) {
+        playError();
         showToast(error?.message || 'Failed to create wave', 'error');
         throw error;
       }
@@ -333,6 +336,7 @@ export function WavePickingPage() {
   const handleReleaseWave = async (waveId: string) => {
     try {
       await releaseWaveMutation.mutateAsync(waveId);
+      playSuccess();
       showToast('Wave released successfully', 'success');
     } catch (error) {}
   };
@@ -340,6 +344,7 @@ export function WavePickingPage() {
   const handleCompleteWave = async (waveId: string) => {
     try {
       await completeWaveMutation.mutateAsync(waveId);
+      playSuccess();
       showToast('Wave completed successfully', 'success');
       setSelectedWave(null);
     } catch (error) {}

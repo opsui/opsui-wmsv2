@@ -11,6 +11,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { cycleCountApi } from '@/services/api';
 import { CycleCountEntry } from '@opsui/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { playSound } from '@/stores';
 
 export function MobileScanningPage() {
   const { planId } = useParams<{ planId: string }>();
@@ -58,6 +59,7 @@ export function MobileScanningPage() {
       try {
         await submitMutation.mutateAsync({ entryId: currentEntry.entryId, quantity: qty });
       } catch (error: any) {
+        playSound('error');
         playFeedback('error');
       }
     },
@@ -80,6 +82,7 @@ export function MobileScanningPage() {
         countedQuantity: quantity,
       }),
     onSuccess: () => {
+      playSound('success');
       playFeedback('success');
       setCurrentIndex(prev => prev + 1);
       setBarcodeInput('');
@@ -87,6 +90,7 @@ export function MobileScanningPage() {
       setFieldValue('quantity', '');
     },
     onError: () => {
+      playSound('error');
       playFeedback('error');
     },
   });
@@ -135,6 +139,7 @@ export function MobileScanningPage() {
 
     // Look up SKU from barcode (simplified - in real app would call SKU API)
     if (currentEntry && barcode.includes(currentEntry.sku)) {
+      playSound('success');
       playFeedback('success');
       speak(`${currentEntry.sku} found`);
       // Auto-focus quantity

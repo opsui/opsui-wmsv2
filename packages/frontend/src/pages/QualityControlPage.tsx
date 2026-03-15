@@ -52,6 +52,7 @@ import {
   useDeleteChecklist,
 } from '../services/api';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 
 // ============================================================================
 // TYPES
@@ -155,6 +156,7 @@ interface InspectionModalProps {
 
 function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProps) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const isEdit = !!inspection;
   const createMutation = useCreateInspection();
   const updateMutation = useUpdateInspection();
@@ -199,15 +201,18 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
             inspectionId: inspection.inspectionId,
             updates: values as any,
           });
+          playSuccess();
           showToast('Inspection updated successfully', 'success');
         } else {
           await createMutation.mutateAsync(values as any);
+          playSuccess();
           showToast('Inspection created successfully', 'success');
         }
         onSuccess();
         onClose();
       } catch (error: any) {
         console.error('Failed to save inspection:', error);
+        playError();
         showToast(error?.message || 'Failed to save inspection', 'error');
         throw error;
       }
@@ -419,6 +424,7 @@ interface ChecklistModalProps {
 
 function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const isEdit = !!checklist;
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
@@ -474,10 +480,12 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
     e.preventDefault();
     try {
       await createMutation.mutateAsync(formData as any);
+      playSuccess();
       showToast('Checklist saved successfully', 'success');
       onSuccess();
     } catch (error: any) {
       console.error('Failed to save checklist:', error);
+      playError();
       showToast(error?.message || 'Failed to save checklist', 'error');
     }
   };
@@ -491,10 +499,12 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
     if (!checklist) return;
     try {
       await deleteMutation.mutateAsync(checklist.checklistId);
+      playSuccess();
       showToast('Checklist deleted successfully', 'success');
       onSuccess();
     } catch (error: any) {
       console.error('Failed to delete checklist:', error);
+      playError();
       showToast(error?.message || 'Failed to delete checklist', 'error');
     } finally {
       setDeleteConfirm(false);

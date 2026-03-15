@@ -279,6 +279,12 @@ function ensureAudioUnlockListeners(): void {
   audioUnlockListenersBound = true;
 }
 
+// Register listeners immediately so any user interaction before the first playSound call
+// still sets hasUserInteracted = true (fixes scans on first page load)
+if (typeof document !== 'undefined') {
+  ensureAudioUnlockListeners();
+}
+
 /**
  * Play a sound notification
  * Uses clean, Apple-like sounds with proper envelopes and harmonics
@@ -313,21 +319,17 @@ export function playSound(
 
   switch (type) {
     case 'success':
-      // Clean, pleasant "ding" - like macOS notification
-      // Primary tone
-      createTone(audioContext, masterGain, 783.99, 'sine', 0, 0.15, 0.15); // G5
-      // Harmonic for brightness
-      createTone(audioContext, masterGain, 1567.98, 'sine', 0, 0.1, 0.1); // G6
-      masterGain.gain.setValueAtTime(0.08, currentTime);
-      masterGain.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.3);
+      // Satisfying ascending bloop - rising frequency sweep
+      createBloop(audioContext, masterGain, 520, 880, 0.18);
+      masterGain.gain.setValueAtTime(0.12, currentTime);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.22);
       break;
 
     case 'error':
-      // Clean, low "thud" - gentle but clear error sound
-      createTone(audioContext, masterGain, 196.0, 'sine', 0, 0.2, 0.15); // G3
-      createTone(audioContext, masterGain, 156.8, 'triangle', 0, 0.15, 0.1); // Eb3
-      masterGain.gain.setValueAtTime(0.1, currentTime);
-      masterGain.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.25);
+      // Descending bloop - same character as success but falling, clearly "wrong"
+      createBloop(audioContext, masterGain, 520, 210, 0.2);
+      masterGain.gain.setValueAtTime(0.12, currentTime);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.24);
       break;
 
     case 'warning':
@@ -367,6 +369,47 @@ export function playSound(
     masterGain.disconnect();
     audioContext.close();
   }, 400);
+}
+
+/**
+ * Helper function to create a frequency-sweeping bloop sound
+ */
+function createBloop(
+  audioContext: AudioContext,
+  output: AudioNode,
+  startFreq: number,
+  endFreq: number,
+  duration: number
+): void {
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(output);
+
+  oscillator.type = 'sine';
+
+  const t0 = audioContext.currentTime;
+  const attackEnd = t0 + 0.012;
+  const releaseEnd = t0 + duration;
+
+  oscillator.frequency.setValueAtTime(startFreq, t0);
+  oscillator.frequency.exponentialRampToValueAtTime(endFreq, releaseEnd);
+
+  gainNode.gain.setValueAtTime(0, t0);
+  gainNode.gain.linearRampToValueAtTime(0.3, attackEnd);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, releaseEnd);
+
+  oscillator.start(t0);
+  oscillator.stop(releaseEnd);
+
+  setTimeout(
+    () => {
+      gainNode.disconnect();
+      oscillator.disconnect();
+    },
+    duration * 1000 + 100
+  );
 }
 
 /**

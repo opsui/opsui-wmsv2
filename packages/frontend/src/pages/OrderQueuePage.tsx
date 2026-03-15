@@ -47,6 +47,7 @@ import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'r
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useIsPerformanceMode } from '@/hooks/useHardwareCapabilities';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { apiClient } from '@/lib/api-client';
 
 // ============================================================================
@@ -849,6 +850,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const currentUser = useAuthStore(state => state.user);
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
 
   // Admins arriving via ?queue= param (e.g. from the dashboard) can switch modes
   const queueParam = searchParams.get('queue') as QueueMode | null;
@@ -1263,6 +1265,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         activeAllOrdersResult.refetch(),
       ]);
     } catch {
+      playError();
       showToast(`Failed to reload ${mode} queue`, 'error');
     }
   }, [activeAllOrdersResult, activeQueueResult, mode, queryClient, showToast]);
@@ -1323,6 +1326,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
   const handleClaim = async (orderId: string, orderStatus: OrderStatus) => {
     if (!userId) {
+      playError();
       showToast('You must be logged in', 'error');
       return;
     }
@@ -1356,10 +1360,12 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
       if (mode === 'picking') {
         await claimPickingMutation.mutateAsync({ orderId, dto: { pickerId: userId } });
+        playSuccess();
         showToast(`Order ${orderId} claimed successfully`, 'success');
         navigateToOrderDetail(mode, orderId, { hardReload: true });
       } else {
         await claimPackingMutation.mutateAsync({ orderId, packerId: userId });
+        playSuccess();
         showToast(`Order ${orderId} claimed successfully`, 'success');
         navigateToOrderDetail(mode, orderId);
       }
@@ -1368,12 +1374,14 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         error?.response?.data?.error ||
         (error instanceof Error ? error.message : 'Failed to claim order');
       if (msg.includes('already claimed')) {
+        playError();
         showToast(
           `Order is already claimed by another ${mode === 'picking' ? 'picker' : 'packer'}`,
           'error'
         );
         queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
       } else {
+        playError();
         showToast(msg, 'error');
       }
     } finally {

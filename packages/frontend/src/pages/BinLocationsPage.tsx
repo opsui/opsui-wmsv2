@@ -44,6 +44,7 @@ import {
   Breadcrumb,
 } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
@@ -60,6 +61,7 @@ function BinLocationModal({
   onSuccess: () => void;
 }) {
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const createMutation = useCreateBinLocation();
   const updateMutation = useUpdateBinLocation();
   const isEdit = !!location;
@@ -117,14 +119,17 @@ function BinLocationModal({
             binId: location.binId,
             updates: values,
           });
+          playSuccess();
           showToast('Bin location updated successfully', 'success');
         } else {
           await createMutation.mutateAsync(values);
+          playSuccess();
           showToast('Bin location created successfully', 'success');
         }
         onSuccess();
         onClose();
       } catch (error: any) {
+        playError();
         showToast(error?.message || 'Failed to save bin location', 'error');
         throw error;
       }
@@ -445,6 +450,7 @@ function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 export function BinLocationsPage() {
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const { playSuccess, playError } = useFeedbackSounds();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
@@ -505,10 +511,12 @@ export function BinLocationsPage() {
     const { binId } = deleteConfirm;
     try {
       await deleteMutation.mutateAsync(binId);
+      playSuccess();
       showToast(`Bin location ${binId} deleted successfully`, 'success');
       refetch();
     } catch (error: any) {
       console.error('Failed to delete location:', error);
+      playError();
       showToast(error?.message || 'Failed to delete bin location', 'error');
     } finally {
       setDeleteConfirm({ isOpen: false, binId: '' });
