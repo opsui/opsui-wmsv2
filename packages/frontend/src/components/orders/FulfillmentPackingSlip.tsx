@@ -790,35 +790,33 @@ function FulfillmentSlipFooter({
 }) {
   return (
     <>
-      <div className="px-6 py-3 border-t-2 border-slate-200 print:border-gray-400">
-        <div className="flex items-end justify-between">
-          <div className="text-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-              Picked By
-            </p>
-            <p className="font-semibold text-slate-900 print:text-black">{pickedByLabel}</p>
-            {pickedAtLabel ? (
-              <p className="text-slate-700 text-xs mt-1 print:text-black">{pickedAtLabel}</p>
-            ) : null}
+      <div className="px-6 py-2 border-t-2 border-slate-200 print:border-gray-400">
+        <div className="flex items-center gap-8 text-xs">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-bold uppercase tracking-wider text-slate-500 print:text-black">
+              Picked By:
+            </span>
+            <span className="font-semibold text-slate-900 print:text-black">{pickedByLabel}</span>
+            {pickedAtLabel && (
+              <span className="text-slate-500 print:text-black">· {pickedAtLabel}</span>
+            )}
           </div>
-          <div className="flex gap-12">
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                Packed By
-              </p>
-              {packedByLabel ? (
-                <div className="min-w-[9rem] px-2 text-center">
-                  <p className="text-sm font-semibold text-slate-900 print:text-black">
-                    {packedByLabel}
-                  </p>
-                  {packedAtLabel ? (
-                    <p className="mt-1 text-xs text-slate-700 print:text-black">{packedAtLabel}</p>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
-              )}
-            </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-bold uppercase tracking-wider text-slate-500 print:text-black">
+              Packed By:
+            </span>
+            {packedByLabel ? (
+              <>
+                <span className="font-semibold text-slate-900 print:text-black">
+                  {packedByLabel}
+                </span>
+                {packedAtLabel && (
+                  <span className="text-slate-500 print:text-black">· {packedAtLabel}</span>
+                )}
+              </>
+            ) : (
+              <span className="w-32 inline-block border-b border-slate-400 print:border-gray-500" />
+            )}
           </div>
         </div>
       </div>
