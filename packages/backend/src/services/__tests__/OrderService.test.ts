@@ -1090,6 +1090,46 @@ describe('OrderService', () => {
         ConflictError
       );
     });
+
+    it('should allow verifying up to the picked quantity for a partially backordered line', async () => {
+      const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
+      const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
+      const mockClient = {
+        query: jest.fn().mockImplementation((sql: string) => {
+          if (sql.includes('FROM orders') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ order_id: 'ORD-TEST-001', status: OrderStatus.PACKING }] };
+          }
+          if (sql.includes('FROM order_items') && sql.includes('FOR UPDATE')) {
+            return {
+              rows: [
+                {
+                  order_item_id: 'oi-001',
+                  quantity: 10,
+                  picked_quantity: 7,
+                  verified_quantity: 6,
+                  status: 'PARTIAL_PICKED',
+                  skip_reason: 'Backordered remainder',
+                },
+              ],
+            };
+          }
+          return { rows: [], rowCount: 1 };
+        }),
+      };
+
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(updatedOrder);
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
+
+      const result = await orderService.verifyPackingItem('ORD-TEST-001', 'oi-001', 1);
+
+      expect(result).toBeDefined();
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('SET verified_quantity = $1'),
+        [7, 'PARTIAL_PICKED', 'oi-001']
+      );
+    });
   });
 
   describe('skipPackingItem', () => {
@@ -1565,7 +1605,7 @@ describe('OrderService', () => {
       ]);
     });
 
-    it('should disable NetSuite ready to ship before skipping a NetSuite-backed task', async () => {
+    it('should preserve NetSuite ready to ship when other packable lines remain after a skip', async () => {
       const skippedTask = { ...mockPickTask, orderId: 'SO68561', skipReason: 'Out of stock' };
       const defaultPoolQuery = jest.fn().mockResolvedValue({
         rows: [
@@ -1591,20 +1631,85 @@ describe('OrderService', () => {
       }));
       getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
 
-      query.mockResolvedValueOnce({
+      query
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              ...mockPickTask,
+              order_id: 'SO68561',
+              order_item_id: 'oi-001',
+              organizationId: 'ORG320EDF1',
+              netsuiteSource: 'NETSUITE',
+              netsuiteSoInternalId: '1604613',
+              netsuiteSoTranId: 'SO68561',
+            },
+          ],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 })
+        .mockResolvedValueOnce({
+          rows: [
+            { quantity: 2, picked_quantity: 0, skip_reason: 'Out of stock' },
+            { quantity: 3, picked_quantity: 0, skip_reason: null },
+          ],
+          rowCount: 2,
+        });
+      pickTaskRepository.skipPickTask.mockResolvedValue(skippedTask);
+      orderRepository.getOrderWithItems.mockResolvedValue({ ...mockOrder, orderId: 'SO68561' });
+
+      await orderService.skipPickTask('pt-001', 'Out of stock', 'picker-123');
+
+      expect(updateSalesOrderStatus).not.toHaveBeenCalled();
+    });
+
+    it('should disable NetSuite ready to ship when a skip leaves no packable lines', async () => {
+      const skippedTask = { ...mockPickTask, orderId: 'SO68561', skipReason: 'Out of stock' };
+      const defaultPoolQuery = jest.fn().mockResolvedValue({
         rows: [
           {
-            ...mockPickTask,
-            order_id: 'SO68561',
-            order_item_id: 'oi-001',
-            organizationId: 'ORG320EDF1',
-            netsuiteSource: 'NETSUITE',
-            netsuiteSoInternalId: '1604613',
-            netsuiteSoTranId: 'SO68561',
+            integration_id: 'INT-AAP-NS01',
+            configuration: {
+              auth: {
+                accountId: 'acc',
+                tokenId: 'tid',
+                tokenSecret: 'tsec',
+                consumerKey: 'ck',
+                consumerSecret: 'cs',
+              },
+            },
           },
         ],
         rowCount: 1,
       });
+      const updateSalesOrderStatus = jest.fn().mockResolvedValue(undefined);
+
+      NetSuiteClient.mockImplementation(() => ({
+        updateSalesOrderStatus,
+      }));
+      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
+
+      query
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              ...mockPickTask,
+              order_id: 'SO68561',
+              order_item_id: 'oi-001',
+              organizationId: 'ORG320EDF1',
+              netsuiteSource: 'NETSUITE',
+              netsuiteSoInternalId: '1604613',
+              netsuiteSoTranId: 'SO68561',
+            },
+          ],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 })
+        .mockResolvedValueOnce({
+          rows: [{ quantity: 2, picked_quantity: 0, skip_reason: 'Out of stock' }],
+          rowCount: 1,
+        });
       pickTaskRepository.skipPickTask.mockResolvedValue(skippedTask);
       orderRepository.getOrderWithItems.mockResolvedValue({ ...mockOrder, orderId: 'SO68561' });
 

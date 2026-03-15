@@ -317,6 +317,72 @@ export class OrderService {
     return typeof skipReason === 'string' ? skipReason.trim().length > 0 : Boolean(skipReason);
   }
 
+  private getRequiredPackingQuantity(item: {
+    quantity?: unknown;
+    pickedQuantity?: unknown;
+    picked_quantity?: unknown;
+    skipReason?: unknown;
+    skip_reason?: unknown;
+  }): number {
+    const orderedQuantity = Math.max(0, Number(item.quantity ?? 0));
+    const pickedQuantity = Math.max(0, Number(item.pickedQuantity ?? item.picked_quantity ?? 0));
+    const hasSkipReason = this.hasSkipReason(item.skipReason ?? item.skip_reason);
+
+    if (!hasSkipReason) {
+      return orderedQuantity;
+    }
+
+    return Math.min(orderedQuantity, pickedQuantity);
+  }
+
+  private isFullySkippedPackingLine(item: {
+    quantity?: unknown;
+    pickedQuantity?: unknown;
+    picked_quantity?: unknown;
+    skipReason?: unknown;
+    skip_reason?: unknown;
+  }): boolean {
+    return (
+      this.hasSkipReason(item.skipReason ?? item.skip_reason) &&
+      this.getRequiredPackingQuantity(item) === 0
+    );
+  }
+
+  private async syncNetSuiteReadyToShipForPickingSkip(
+    orderId: string,
+    source?: Record<string, unknown> | null,
+    reason?: string
+  ): Promise<void> {
+    const orderItemsResult = await query(
+      `SELECT quantity, picked_quantity, skip_reason
+       FROM order_items
+       WHERE order_id = $1`,
+      [orderId]
+    );
+
+    if (orderItemsResult.rows.length === 0) {
+      return;
+    }
+
+    const hasAnyPackableLines = orderItemsResult.rows.some((item: any) => {
+      const orderedQuantity = Math.max(0, Number(item.quantity ?? 0));
+      const pickedQuantity = Math.max(0, Number(item.picked_quantity ?? item.pickedQuantity ?? 0));
+      const hasSkipReason = this.hasSkipReason(item.skip_reason ?? item.skipReason);
+
+      if (pickedQuantity > 0) {
+        return true;
+      }
+
+      return orderedQuantity > 0 && !hasSkipReason;
+    });
+
+    if (hasAnyPackableLines) {
+      return;
+    }
+
+    await this.markNetSuiteOrderNotReadyToShip(orderId, source, reason);
+  }
+
   private derivePickedItemStatus(
     pickedQuantity: unknown,
     orderedQuantity: unknown,
@@ -344,16 +410,15 @@ export class OrderService {
 
   private isPackingLineComplete(item: {
     quantity?: unknown;
+    pickedQuantity?: unknown;
+    picked_quantity?: unknown;
     verifiedQuantity?: unknown;
     verified_quantity?: unknown;
     skipReason?: unknown;
     skip_reason?: unknown;
   }): boolean {
     const verifiedQuantity = Number(item.verifiedQuantity ?? item.verified_quantity ?? 0);
-    const orderedQuantity = Number(item.quantity ?? 0);
-    return (
-      verifiedQuantity >= orderedQuantity || this.hasSkipReason(item.skipReason ?? item.skip_reason)
-    );
+    return verifiedQuantity >= this.getRequiredPackingQuantity(item);
   }
 
   private async recalculatePickingProgress(
@@ -386,10 +451,11 @@ export class OrderService {
              SELECT COUNT(*)
              FROM order_items oi
              WHERE oi.order_id = $1
-               AND (
-                 COALESCE(oi.verified_quantity, 0) >= oi.quantity
-                 OR COALESCE(NULLIF(TRIM(oi.skip_reason), ''), NULL) IS NOT NULL
-               )
+               AND COALESCE(oi.verified_quantity, 0) >= CASE
+                 WHEN COALESCE(NULLIF(TRIM(oi.skip_reason), ''), NULL) IS NOT NULL
+                   THEN LEAST(oi.quantity, GREATEST(COALESCE(oi.picked_quantity, 0), 0))
+                 ELSE oi.quantity
+               END
            ) AS FLOAT)
            / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
          ), 0)
@@ -925,10 +991,6 @@ export class OrderService {
     const task = taskResult.rows[0] as any;
     const orderId = String(task.orderId ?? task.order_id ?? '');
 
-    if (orderId) {
-      await this.markNetSuiteOrderNotReadyToShip(orderId, task, reason);
-    }
-
     const isPartialSkip =
       skipQuantity !== undefined && skipQuantity !== null && skipQuantity < task.quantity;
 
@@ -937,7 +999,7 @@ export class OrderService {
     if (isPartialSkip) {
       // Partial skip: mark task COMPLETED with the remaining picked quantity
       const pickedQuantity = task.quantity - skipQuantity!;
-      pickTask = await pickTaskRepository.partialSkipPickTask(pickTaskId, pickedQuantity);
+      pickTask = await pickTaskRepository.partialSkipPickTask(pickTaskId, pickedQuantity, reason);
 
       const itemStatus = this.derivePickedItemStatus(pickedQuantity, task.quantity);
 
@@ -945,9 +1007,11 @@ export class OrderService {
       if (task.order_item_id) {
         await query(
           `UPDATE order_items
-             SET picked_quantity = $1, status = $2::order_item_status
-             WHERE order_item_id = $3`,
-          [pickedQuantity, itemStatus, task.order_item_id]
+             SET picked_quantity = $1,
+                 status = $2::order_item_status,
+                 skip_reason = $3
+             WHERE order_item_id = $4`,
+          [pickedQuantity, itemStatus, reason, task.order_item_id]
         );
       }
     } else {
@@ -968,6 +1032,10 @@ export class OrderService {
 
     // Recalculate order progress so skipped/completed tasks count toward completion immediately
     await this.recalculatePickingProgress({ query }, pickTask.orderId);
+
+    if (orderId) {
+      await this.syncNetSuiteReadyToShipForPickingSkip(orderId, task, reason);
+    }
 
     // Return updated order
     return this.getOrder(pickTask.orderId);
@@ -1123,6 +1191,7 @@ export class OrderService {
 
       const orderItem = orderItemResult.rows[0];
       const orderId = orderItem.order_id;
+      const requiredPackingQuantity = this.getRequiredPackingQuantity(orderItem);
 
       if (orderItem.order_status !== OrderStatus.PACKING) {
         throw new ValidationError(
@@ -1130,9 +1199,9 @@ export class OrderService {
         );
       }
 
-      if (newQuantity > orderItem.quantity) {
+      if (newQuantity > requiredPackingQuantity) {
         throw new ValidationError(
-          `New quantity (${newQuantity}) exceeds required quantity (${orderItem.quantity}). Over-scanning is not allowed.`
+          `New quantity (${newQuantity}) exceeds required packing quantity (${requiredPackingQuantity}). Over-scanning is not allowed.`
         );
       }
 
@@ -1162,6 +1231,10 @@ export class OrderService {
       const existingSkipReason = this.hasSkipReason(orderItem.skip_reason ?? orderItem.skipReason)
         ? (orderItem.skip_reason ?? orderItem.skipReason)
         : null;
+      const shouldClearSkipReason =
+        Boolean(existingSkipReason) &&
+        newQuantity > 0 &&
+        requiredPackingQuantity >= Number(orderItem.quantity ?? 0);
       const updatedStatus =
         existingSkipReason && newQuantity > 0
           ? this.derivePickedItemStatus(
@@ -1177,12 +1250,7 @@ export class OrderService {
              status = $2::order_item_status,
              skip_reason = $3
          WHERE order_item_id = $4`,
-        [
-          newQuantity,
-          updatedStatus,
-          existingSkipReason && newQuantity > 0 ? null : existingSkipReason,
-          workItemId,
-        ]
+        [newQuantity, updatedStatus, shouldClearSkipReason ? null : existingSkipReason, workItemId]
       );
 
       await this.recalculatePackingProgress(client, orderId);
@@ -1728,7 +1796,7 @@ export class OrderService {
     }
 
     const orderItemsResult = await query(
-      `SELECT order_item_id, sku, quantity, verified_quantity, skip_reason
+      `SELECT order_item_id, sku, quantity, picked_quantity, verified_quantity, skip_reason
        FROM order_items
        WHERE order_id = $1
        ORDER BY order_item_id`,
@@ -1746,9 +1814,7 @@ export class OrderService {
 
     const allItemsSkipped =
       orderItemsResult.rows.length > 0 &&
-      orderItemsResult.rows.every((item: any) =>
-        this.hasSkipReason(item.skipReason ?? item.skip_reason)
-      );
+      orderItemsResult.rows.every((item: any) => this.isFullySkippedPackingLine(item));
 
     // Create NetSuite fulfillment now (after packing), so skipped packing items are excluded
     await this.createNetSuiteFulfillmentForPickedOrder(orderId);
@@ -1878,11 +1944,12 @@ export class OrderService {
 
       const item = itemResult.rows[0];
       const currentVerified = Number(item.verified_quantity ?? item.verifiedQuantity ?? 0);
+      const requiredPackingQuantity = this.getRequiredPackingQuantity(item);
       const updatedVerifiedQuantity = currentVerified + quantity;
 
-      if (updatedVerifiedQuantity > Number(item.quantity)) {
+      if (updatedVerifiedQuantity > requiredPackingQuantity) {
         throw new ConflictError(
-          `Cannot verify more items than ordered (max: ${item.quantity}, already verified: ${currentVerified}, trying to add: ${quantity})`
+          `Cannot verify more items than required for packing (max: ${requiredPackingQuantity}, already verified: ${currentVerified}, trying to add: ${quantity})`
         );
       }
 
@@ -1895,8 +1962,7 @@ export class OrderService {
       await client.query(
         `UPDATE order_items
          SET verified_quantity = $1,
-             status = $2::order_item_status,
-             skip_reason = NULL
+             status = $2::order_item_status
          WHERE order_item_id = $3`,
         [updatedVerifiedQuantity, updatedStatus, orderItemId]
       );

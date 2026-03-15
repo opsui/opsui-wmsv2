@@ -984,12 +984,22 @@ export function PickingPage() {
     Boolean(
       item && ((item.skipReason && item.skipReason.trim().length > 0) || item.status === 'SKIPPED')
     );
+  const isItemResolved = (
+    item:
+      | { status?: string; skipReason?: string | null; pickedQuantity?: number; quantity?: number }
+      | null
+      | undefined
+  ) =>
+    Boolean(
+      item &&
+      (isItemSkipped(item) ||
+        item.status === 'COMPLETED' ||
+        (item.pickedQuantity || 0) >= (item.quantity || 0))
+    );
 
   // Calculate progress
   const totalTasks = order?.items?.length || 0;
-  const completedTasks =
-    order?.items?.filter(item => item.pickedQuantity >= item.quantity || isItemSkipped(item))
-      .length || 0;
+  const completedTasks = order?.items?.filter(item => isItemResolved(item)).length || 0;
 
   // Reset scan error when current task changes
   useEffect(() => {
@@ -999,9 +1009,7 @@ export function PickingPage() {
   // Restore the last focused task when possible, otherwise move to the first incomplete item.
   useEffect(() => {
     if (order?.items && order.items.length > 0) {
-      let nextIndex = order.items.findIndex(
-        item => !isItemSkipped(item) && item.pickedQuantity < item.quantity
-      );
+      let nextIndex = order.items.findIndex(item => !isItemResolved(item));
 
       if (pickingTaskStorageKey) {
         const storedIndex = Number(sessionStorage.getItem(pickingTaskStorageKey));
@@ -1009,18 +1017,14 @@ export function PickingPage() {
           Number.isInteger(storedIndex) &&
           storedIndex >= 0 &&
           storedIndex < order.items.length &&
-          !isItemSkipped(order.items[storedIndex]) &&
-          order.items[storedIndex].pickedQuantity < order.items[storedIndex].quantity
+          !isItemResolved(order.items[storedIndex])
         ) {
           nextIndex = storedIndex;
         }
       }
 
       const currentItem = order.items[currentTaskIndex];
-      const isCurrentItemSelectable =
-        currentItem &&
-        !isItemSkipped(currentItem) &&
-        currentItem.pickedQuantity < currentItem.quantity;
+      const isCurrentItemSelectable = currentItem && !isItemResolved(currentItem);
 
       if (!isCurrentItemSelectable && nextIndex !== -1 && nextIndex !== currentTaskIndex) {
         setSelectedTaskIndex(nextIndex);
@@ -1064,7 +1068,7 @@ export function PickingPage() {
 
     for (let i = 0; i < order.items.length; i++) {
       const item = order.items[i];
-      const isCompleted = item.pickedQuantity >= item.quantity;
+      const isCompleted = isItemResolved(item);
       const isSkipped = isItemSkipped(item);
 
       // Skip completed or skipped items
@@ -1102,7 +1106,7 @@ export function PickingPage() {
               setScanError(
                 `Item was skipped: ${getOrderItemDisplayName(item)}. Revert the skip to pick it.`
               );
-            } else if (item.pickedQuantity >= item.quantity) {
+            } else if (isItemResolved(item)) {
               setScanError(`Item already fully picked: ${getOrderItemDisplayName(item)}`);
             }
             playError();
@@ -1123,7 +1127,7 @@ export function PickingPage() {
     const { item: matchedItem, index: matchedIndex } = matchResult;
 
     // Check for over-scanning
-    if (matchedItem.pickedQuantity >= matchedItem.quantity) {
+    if (isItemResolved(matchedItem)) {
       setScanError(`Item already fully picked: ${getOrderItemDisplayName(matchedItem)}`);
       playError();
       showToast('Item already fully picked', 'warning');
@@ -1259,7 +1263,7 @@ export function PickingPage() {
       await refetch();
 
       // Set this as current task if it's not completed
-      if (item.pickedQuantity < item.quantity) {
+      if (!isItemResolved(item)) {
         setSelectedTaskIndex(index);
         setScanValue('');
         setScanError(null);
@@ -2111,7 +2115,7 @@ export function PickingPage() {
                       </p>
                       <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
                         {order.items.map((item, index) => {
-                          const isCompleted = item.pickedQuantity >= item.quantity;
+                          const isCompleted = isItemResolved(item) && !isItemSkipped(item);
                           const isSkipped = isItemSkipped(item);
                           const isCurrent = index === currentTaskIndex;
                           const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;

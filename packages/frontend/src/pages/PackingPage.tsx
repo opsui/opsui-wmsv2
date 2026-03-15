@@ -784,11 +784,55 @@ export function PackingPage() {
     Boolean(
       item && ((item.skipReason && item.skipReason.trim().length > 0) || item.status === 'SKIPPED')
     );
+  const getRequiredPackingQuantity = (
+    item:
+      | {
+          quantity?: number;
+          pickedQuantity?: number;
+          skipReason?: string | null;
+          status?: string;
+        }
+      | null
+      | undefined
+  ) => {
+    if (!item) return 0;
+
+    const orderedQuantity = Math.max(0, Number(item.quantity || 0));
+    const pickedQuantity = Math.max(0, Number(item.pickedQuantity || 0));
+
+    if (!isItemSkipped(item)) {
+      return orderedQuantity;
+    }
+
+    return Math.min(orderedQuantity, pickedQuantity);
+  };
+  const isFullySkippedItem = (
+    item:
+      | {
+          quantity?: number;
+          pickedQuantity?: number;
+          skipReason?: string | null;
+          status?: string;
+        }
+      | null
+      | undefined
+  ) => isItemSkipped(item) && getRequiredPackingQuantity(item) === 0;
+  const isPackingItemComplete = (
+    item:
+      | {
+          quantity?: number;
+          pickedQuantity?: number;
+          verifiedQuantity?: number;
+          skipReason?: string | null;
+          status?: string;
+        }
+      | null
+      | undefined
+  ) => Boolean(item && (item.verifiedQuantity || 0) >= getRequiredPackingQuantity(item));
 
   // Calculate progress
   const totalItems = order?.items?.length || 0;
-  const completedItems =
-    order?.items?.filter(item => (item.verifiedQuantity || 0) >= item.quantity) || [];
+  const completedItems = order?.items?.filter(item => isPackingItemComplete(item)) || [];
   const allVerified = completedItems.length === totalItems && totalItems > 0;
   const verifiedCount = completedItems.length;
   const hasCompletedShippingSession =
@@ -865,9 +909,7 @@ export function PackingPage() {
   // Auto-select first incomplete item when order loads
   useEffect(() => {
     if (order && order.items && order.items.length > 0) {
-      const firstIncompleteIndex = order.items.findIndex(
-        item => (item.verifiedQuantity || 0) < item.quantity && !isItemSkipped(item)
-      );
+      const firstIncompleteIndex = order.items.findIndex(item => !isPackingItemComplete(item));
       if (firstIncompleteIndex !== -1 && firstIncompleteIndex !== currentItemIndex) {
         setCurrentItemIndex(firstIncompleteIndex);
       }
@@ -1367,8 +1409,8 @@ export function PackingPage() {
 
     for (let i = 0; i < order.items.length; i++) {
       const item = order.items[i];
-      const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
-      const isSkipped = isItemSkipped(item);
+      const isCompleted = isPackingItemComplete(item);
+      const isSkipped = isFullySkippedItem(item);
 
       // Skip completed or skipped items
       if (isCompleted || isSkipped) continue;
@@ -1404,11 +1446,11 @@ export function PackingPage() {
           const matchesBarcode = item.barcode && scanValueTrimmed === item.barcode;
           const matchesSku = scanValueTrimmed === item.sku;
           if (matchesBarcode || matchesSku) {
-            if (isItemSkipped(item)) {
+            if (isFullySkippedItem(item)) {
               setScanError(
                 `Item was skipped: ${getOrderItemDisplayName(item)}. Revert the skip to verify it.`
               );
-            } else if ((item.verifiedQuantity || 0) >= item.quantity) {
+            } else if (isPackingItemComplete(item)) {
               setScanError(`Item already fully verified: ${getOrderItemDisplayName(item)}`);
             }
             playError();
@@ -1430,7 +1472,8 @@ export function PackingPage() {
 
     // Check for over-scanning
     const currentVerified = matchedItem.verifiedQuantity || 0;
-    if (currentVerified >= matchedItem.quantity) {
+    const requiredPackingQuantity = getRequiredPackingQuantity(matchedItem);
+    if (currentVerified >= requiredPackingQuantity) {
       setScanError(`Item already fully verified: ${getOrderItemDisplayName(matchedItem)}`);
       playError();
       showToast('Item already fully verified', 'warning');
@@ -1511,15 +1554,12 @@ export function PackingPage() {
       });
 
       // Check if item is now complete and move to next
-      if (newVerified >= matchedItem.quantity) {
+      if (newVerified >= requiredPackingQuantity) {
         const orderData = queryClient.getQueryData(['orders', orderId]) as any;
         if (!orderData?.items) return;
 
         const nextIncompleteIndex = orderData.items.findIndex(
-          (item: any, idx: number) =>
-            idx > matchedIndex &&
-            (item.verifiedQuantity || 0) < item.quantity &&
-            !isItemSkipped(item)
+          (item: any, idx: number) => idx > matchedIndex && !isPackingItemComplete(item)
         );
 
         if (nextIncompleteIndex !== -1) {
@@ -1551,9 +1591,10 @@ export function PackingPage() {
   const handleLogException = async () => {
     if (!currentItem || !currentUser) return;
 
+    const requiredPackingQuantity = getRequiredPackingQuantity(currentItem);
     const quantityActual =
       exceptionType === ExceptionType.SHORT_PICK
-        ? Math.max(0, Math.min(currentItem.quantity, exceptionQuantity || 0))
+        ? Math.max(0, Math.min(requiredPackingQuantity, exceptionQuantity || 0))
         : currentItem.verifiedQuantity || 0;
 
     try {
@@ -1562,7 +1603,7 @@ export function PackingPage() {
         orderItemId: currentItem.orderItemId,
         sku: currentItem.sku,
         type: exceptionType,
-        quantityExpected: currentItem.quantity,
+        quantityExpected: requiredPackingQuantity,
         quantityActual,
         reason: exceptionReason || `Exception reported: ${exceptionType}`,
         reportedBy: currentUser.userId,
@@ -1601,7 +1642,7 @@ export function PackingPage() {
         index,
         sku: item.sku,
         currentVerified,
-        itemQuantity: item.quantity,
+        itemQuantity: getRequiredPackingQuantity(item),
       });
 
       if (currentVerified <= 0) {
@@ -1616,8 +1657,8 @@ export function PackingPage() {
       const reason =
         prompt(
           `Remove 1 verified item from ${getOrderItemDisplayName(item)} (${item.sku})?\n\n` +
-            `Current: ${currentVerified}/${item.quantity}\n\n` +
-            `After undo: ${Math.max(0, currentVerified - 1)}/${item.quantity}\n\n` +
+            `Current: ${currentVerified}/${getRequiredPackingQuantity(item)}\n\n` +
+            `After undo: ${Math.max(0, currentVerified - 1)}/${getRequiredPackingQuantity(item)}\n\n` +
             `Please provide a reason:`
         ) || '';
 
@@ -1718,7 +1759,7 @@ export function PackingPage() {
     }
 
     if (!skipConfirmCheck) {
-      const skippedItems = order?.items?.filter(item => isItemSkipped(item));
+      const skippedItems = order?.items?.filter(item => isFullySkippedItem(item));
 
       if (skippedItems && skippedItems.length > 0) {
         setCompleteShipmentConfirm({ isOpen: true, skippedItems });
@@ -1953,11 +1994,12 @@ export function PackingPage() {
     if (overrideItemIndex === null || !order?.items?.[overrideItemIndex]) return;
 
     const item = order.items[overrideItemIndex];
+    const requiredPackingQuantity = getRequiredPackingQuantity(item);
     const quantity = parseInt(overrideQuantity, 10) || 0;
 
     // Validate quantity
-    if (quantity < 0 || quantity > item.quantity) {
-      showToast(`Quantity must be between 0 and ${item.quantity}`, 'error');
+    if (quantity < 0 || quantity > requiredPackingQuantity) {
+      showToast(`Quantity must be between 0 and ${requiredPackingQuantity}`, 'error');
       return;
     }
 
@@ -2874,7 +2916,7 @@ export function PackingPage() {
                         Needed
                       </p>
                       <p className="quantity-display text-gray-900 dark:text-white">
-                        {currentItem.quantity}
+                        {getRequiredPackingQuantity(currentItem)}
                       </p>
                     </div>
                   </div>
@@ -2896,8 +2938,11 @@ export function PackingPage() {
                     </p>
                     <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
                       {order.items?.map((item, index) => {
-                        const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
-                        const isSkipped = isItemSkipped(item);
+                        const requiredPackingQuantity = getRequiredPackingQuantity(item);
+                        const isCompleted =
+                          isPackingItemComplete(item) && !isFullySkippedItem(item);
+                        const isSkipped = isFullySkippedItem(item);
+                        const isBackordered = isItemSkipped(item) && !isSkipped;
                         const isCurrent = index === currentItemIndex;
                         const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
 
@@ -2981,8 +3026,10 @@ export function PackingPage() {
                                   <p className="text-xs text-gray-500 font-mono truncate">
                                     {item.binLocation}
                                   </p>
-                                  {isSkipped && item.skipReason && (
-                                    <p className="text-xs text-warning-300 truncate">
+                                  {(isSkipped || isBackordered) && item.skipReason && (
+                                    <p
+                                      className={`text-xs truncate ${isSkipped ? 'text-warning-300' : 'text-primary-300'}`}
+                                    >
                                       ({item.skipReason})
                                     </p>
                                   )}
@@ -3005,7 +3052,7 @@ export function PackingPage() {
                               >
                                 {isSkipped
                                   ? 'Skipped'
-                                  : `${item.verifiedQuantity || 0}/${item.quantity}`}
+                                  : `${item.verifiedQuantity || 0}/${requiredPackingQuantity}`}
                               </p>
 
                               {/* Action buttons - only show for current/selected item */}
@@ -3207,7 +3254,7 @@ export function PackingPage() {
                         Required
                       </p>
                       <p className="mt-1 picking-title text-gray-900 dark:text-white">
-                        {currentItem.quantity}
+                        {getRequiredPackingQuantity(currentItem)}
                       </p>
                     </div>
                     <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3">
@@ -3255,7 +3302,7 @@ export function PackingPage() {
                       <input
                         type="number"
                         min={0}
-                        max={currentItem.quantity}
+                        max={getRequiredPackingQuantity(currentItem)}
                         value={exceptionQuantity}
                         onChange={e => setExceptionQuantity(parseInt(e.target.value, 10) || 0)}
                         className={`${packingInputClass} font-mono`}
@@ -3344,8 +3391,8 @@ export function PackingPage() {
                         {order.items[overrideItemIndex].sku}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Required: {order.items[overrideItemIndex].quantity} | Currently Verified:{' '}
-                        {order.items[overrideItemIndex].verifiedQuantity || 0}
+                        Required: {getRequiredPackingQuantity(order.items[overrideItemIndex])} |
+                        Currently Verified: {order.items[overrideItemIndex].verifiedQuantity || 0}
                       </p>
                     </div>
                   </div>
@@ -3359,15 +3406,15 @@ export function PackingPage() {
                     <input
                       type="number"
                       min={0}
-                      max={order.items[overrideItemIndex].quantity}
+                      max={getRequiredPackingQuantity(order.items[overrideItemIndex])}
                       value={overrideQuantity}
                       onChange={e => setOverrideQuantity(e.target.value)}
                       onFocus={e => e.target.select()}
                       className={`${packingInputClass} font-mono text-lg`}
                     />
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      Max: {order.items[overrideItemIndex].quantity} (cannot exceed required
-                      quantity)
+                      Max: {getRequiredPackingQuantity(order.items[overrideItemIndex])} (cannot
+                      exceed required quantity)
                     </p>
                   </div>
 
