@@ -564,6 +564,20 @@ export function FulfillmentPackingSlip({
                     <p className="text-gray-600 print:text-black">Silverdale 0932, Auckland</p>
                     <p className="text-gray-600 print:text-black">New Zealand</p>
                   </div>
+                  {salesOrderBarcode && (
+                    <div className="flex flex-col items-center justify-center pt-1">
+                      <BarcodeGraphic
+                        barcode={salesOrderBarcode}
+                        size={salesOrderBarcodeSize}
+                        image={salesOrderBarcodeImage}
+                        height={24}
+                        rectKeyPrefix="sales-order-barcode"
+                      />
+                      <p className="mt-0.5 font-mono text-[10px] font-semibold tracking-tight text-slate-900 print:text-black">
+                        {salesOrderBarcode.displayValue}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="ml-auto min-w-[20rem] max-w-[24rem]">
                   <div className="flex items-start justify-between gap-6">
@@ -623,25 +637,6 @@ export function FulfillmentPackingSlip({
               </div>
             </div>
           </div>
-
-          {salesOrderBarcode && (
-            <div className="px-6 py-2 border-b border-slate-200 print:bg-white">
-              <div className="flex justify-center">
-                <div className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 print:border-gray-400">
-                  <BarcodeGraphic
-                    barcode={salesOrderBarcode}
-                    size={salesOrderBarcodeSize}
-                    image={salesOrderBarcodeImage}
-                    height={24}
-                    rectKeyPrefix="sales-order-barcode"
-                  />
-                  <p className="mt-1 text-center font-mono text-xs font-semibold tracking-tight text-slate-900 print:text-black">
-                    {salesOrderBarcode.displayValue}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="px-6 py-1.5 border-b border-slate-200">
             <div className="grid md:grid-cols-2 gap-3">
