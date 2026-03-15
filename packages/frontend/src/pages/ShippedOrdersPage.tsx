@@ -53,14 +53,29 @@ interface ShippedOrder {
 }
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+function isFreightwaysCarrier(carrier: string, trackingNumber: string): boolean {
+  const c = carrier.toUpperCase();
+  return (
+    c.includes('NZC') ||
+    c.includes('NZ COURIERS') ||
+    c.includes('POST HASTE') ||
+    c.includes('FREIGHTWAYS') ||
+    /^NZC\d/i.test(trackingNumber)
+  );
+}
+
+// ============================================================================
 // NZC TRACKING PANEL
 // ============================================================================
 
 function NZCTrackingPanel({ connote }: { connote: string }) {
   const { data, isLoading, isError } = useNZCTracking(connote);
-  const results: any[] = data?.data ?? [];
-  const events: any[] = results[0]?.Packages?.[0]?.TrackingEvents ?? [];
-  const status: string = results[0]?.Status ?? results[0]?.Packages?.[0]?.Status ?? '';
+  const result = data?.data;
+  const events: any[] = result?.events ?? [];
+  const status: string = result?.status ?? '';
 
   if (isLoading) {
     return <p className="shipping-history-status text-xs opacity-60">Loading tracking…</p>;
@@ -84,10 +99,10 @@ function NZCTrackingPanel({ connote }: { connote: string }) {
         <div key={i} className="shipping-history-item">
           <div className={cn('shipping-history-dot', i === 0 && 'shipping-history-active')} />
           <div className="shipping-history-content">
-            <span className="shipping-history-status">{event.Description}</span>
-            {event.Location && <span className="shipping-history-location">{event.Location}</span>}
+            <span className="shipping-history-status">{event.description ?? event.status}</span>
+            {event.location && <span className="shipping-history-location">{event.location}</span>}
             <span className="shipping-history-time">
-              {new Date(event.DateTime).toLocaleString('en-NZ', {
+              {new Date(event.timestamp).toLocaleString('en-NZ', {
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
@@ -380,7 +395,7 @@ export function ShippedOrdersPage() {
                       <div className="shipping-expanded-section">
                         <h4 className="shipping-expanded-title">Tracking History</h4>
                         <div className="shipping-tracking-history">
-                          {order.carrier.toUpperCase().includes('NZC') &&
+                          {isFreightwaysCarrier(order.carrier, order.trackingNumber) &&
                           order.trackingNumber !== '—' ? (
                             <NZCTrackingPanel connote={order.trackingNumber} />
                           ) : (
@@ -401,7 +416,7 @@ export function ShippedOrdersPage() {
                         setSelectedOrder(selectedOrder?.id === order.id ? null : order);
                       }}
                     >
-                      {order.carrier.toUpperCase().includes('NZC')
+                      {isFreightwaysCarrier(order.carrier, order.trackingNumber)
                         ? selectedOrder?.id === order.id
                           ? 'Hide Tracking'
                           : 'Track Package'

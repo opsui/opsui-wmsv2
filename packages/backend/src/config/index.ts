@@ -48,6 +48,7 @@ const ALLOWED_ENV_KEYS = new Set([
   'NZC_API_KEY',
   'NZC_SITE_ID',
   'NZC_SUPPORT_EMAIL',
+  'NZC_TRACKING_API_KEY',
   'SENDGRID_API_KEY',
   'SENDGRID_FROM_EMAIL',
   'SENDGRID_REPLY_TO_EMAIL',
@@ -265,6 +266,7 @@ export default {
     apiKey: getEnv('NZC_API_KEY', ''),
     siteId: getEnv('NZC_SITE_ID', ''),
     supportEmail: getEnv('NZC_SUPPORT_EMAIL', ''),
+    trackingApiKey: getEnv('NZC_TRACKING_API_KEY', ''),
   },
 
   // Email Provider Configuration

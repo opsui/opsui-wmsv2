@@ -122,31 +122,24 @@ export interface NZCShipmentResponse {
 }
 
 /**
- * NZC Tracking event
+ * Freightways Tracking event
  */
 export interface NZCTrackingEvent {
-  DateTime: string;
-  Description: string;
-  Location?: string;
+  timestamp: string;
+  location?: string;
+  status: string;
+  description?: string;
 }
 
 /**
- * NZC Tracking package
- */
-export interface NZCTrackingPackage {
-  Connote: string;
-  Status: string;
-  TrackingEvents: NZCTrackingEvent[];
-}
-
-/**
- * NZC Tracking result (one per consignment)
+ * Freightways Tracking result
  */
 export interface NZCTrackingResult {
-  Consignment: string;
-  Carrier: string;
-  Status: string;
-  Packages: NZCTrackingPackage[];
+  ticketNumber: string;
+  carrier: string;
+  status: string;
+  lastUpdated: string;
+  events: NZCTrackingEvent[];
 }
 
 /**
@@ -715,17 +708,21 @@ export class NZCService {
   }
 
   /**
-   * Get tracking status and events for a consignment
+   * Get tracking status and events for a consignment via Freightways API
    */
-  async getTracking(connote: string): Promise<NZCTrackingResult[]> {
+  async getTracking(connote: string): Promise<NZCTrackingResult> {
     try {
-      logger.info('[NZC] Fetching tracking', { connote });
+      logger.info('[NZC] Fetching tracking via Freightways', { connote });
 
+      const trackingKey = config.nzc?.trackingApiKey || this.apiKey;
       const response = await fetch(
-        `${this.baseUrl}/api/trackingresults?consignment=${encodeURIComponent(connote)}`,
+        `https://api.freightways.co.nz/v1/track/${encodeURIComponent(connote)}`,
         {
           method: 'GET',
-          headers: this.getHeaders(),
+          headers: {
+            'x-api-key': trackingKey,
+            Accept: 'application/json',
+          },
         }
       );
 
@@ -735,22 +732,18 @@ export class NZCService {
           status: response.status,
           error: errorText,
         });
-        throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
+        throw new Error(`NZC tracking API error: ${response.status} ${response.statusText}`);
       }
 
-      const rawData = (await response.json()) as unknown;
-      const results = Array.isArray(rawData)
-        ? (rawData as NZCTrackingResult[])
-        : rawData && typeof rawData === 'object'
-          ? [rawData as NZCTrackingResult]
-          : [];
+      const result = (await response.json()) as NZCTrackingResult;
 
       logger.info('[NZC] Tracking fetched successfully', {
         connote,
-        resultCount: results.length,
+        status: result.status,
+        eventCount: result.events?.length ?? 0,
       });
 
-      return results;
+      return result;
     } catch (error) {
       logger.error('[NZC] Error fetching tracking', error);
       throw error;
