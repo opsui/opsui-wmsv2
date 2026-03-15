@@ -122,31 +122,24 @@ export interface NZCShipmentResponse {
 }
 
 /**
- * GoSweetSpot Tracking event
+ * GoSweetSpot Tracking event (v2/shipmentstatus)
  */
 export interface NZCTrackingEvent {
-  DateTime: string;
+  EventDT: string;
   Description: string;
   Location?: string;
-}
-
-/**
- * GoSweetSpot Tracking package
- */
-export interface NZCTrackingPackage {
-  Connote: string;
-  Status: string;
-  TrackingEvents: NZCTrackingEvent[];
+  Code?: string;
 }
 
 /**
  * GoSweetSpot Tracking result (one per consignment)
  */
 export interface NZCTrackingResult {
-  Consignment: string;
-  Carrier: string;
+  ConsignmentNo: string;
   Status: string;
-  Packages: NZCTrackingPackage[];
+  Picked?: string;
+  Delivered?: string;
+  Events: NZCTrackingEvent[];
 }
 
 /**
@@ -715,19 +708,17 @@ export class NZCService {
   }
 
   /**
-   * Get tracking status and events for a consignment via GoSweetSpot
+   * Get tracking status and events for a consignment via GoSweetSpot v2/shipmentstatus
    */
   async getTracking(connote: string): Promise<NZCTrackingResult[]> {
     try {
       logger.info('[NZC] Fetching tracking', { connote });
 
-      const response = await fetch(
-        `${this.baseUrl}/api/trackingresults?consignment=${encodeURIComponent(connote)}`,
-        {
-          method: 'GET',
-          headers: this.getHeaders(),
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/v2/shipmentstatus`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify([connote]),
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -739,11 +730,7 @@ export class NZCService {
       }
 
       const rawData = (await response.json()) as unknown;
-      const results = Array.isArray(rawData)
-        ? (rawData as NZCTrackingResult[])
-        : rawData && typeof rawData === 'object'
-          ? [rawData as NZCTrackingResult]
-          : [];
+      const results = Array.isArray(rawData) ? (rawData as NZCTrackingResult[]) : [];
 
       logger.info('[NZC] Tracking fetched successfully', {
         connote,

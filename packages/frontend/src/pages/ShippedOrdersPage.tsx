@@ -59,8 +59,8 @@ interface ShippedOrder {
 function TrackingPanel({ connote }: { connote: string }) {
   const { data, isLoading, isError } = useNZCTracking(connote);
   const results: any[] = data?.data ?? [];
-  const events: any[] = results[0]?.Packages?.[0]?.TrackingEvents ?? [];
-  const status: string = results[0]?.Status ?? results[0]?.Packages?.[0]?.Status ?? '';
+  const events: any[] = results[0]?.Events ?? [];
+  const status: string = results[0]?.Status ?? '';
 
   if (isLoading) {
     return <p className="shipping-history-status text-xs opacity-60">Loading tracking…</p>;
@@ -87,7 +87,7 @@ function TrackingPanel({ connote }: { connote: string }) {
             <span className="shipping-history-status">{event.Description}</span>
             {event.Location && <span className="shipping-history-location">{event.Location}</span>}
             <span className="shipping-history-time">
-              {new Date(event.DateTime).toLocaleString('en-NZ', {
+              {new Date(event.EventDT).toLocaleString('en-NZ', {
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
