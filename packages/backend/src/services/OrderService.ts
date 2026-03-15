@@ -334,6 +334,13 @@ export class OrderService {
     return typeof skipReason === 'string' ? skipReason.trim().length > 0 : Boolean(skipReason);
   }
 
+  private getEffectiveSkipReasonSql(
+    orderItemAlias: string = 'oi',
+    pickTaskAlias: string = 'pt'
+  ): string {
+    return `COALESCE(NULLIF(TRIM(${orderItemAlias}.skip_reason), ''), NULLIF(TRIM(${pickTaskAlias}.skip_reason), ''))`;
+  }
+
   private getRequiredPackingQuantity(item: {
     quantity?: unknown;
     pickedQuantity?: unknown;
@@ -462,15 +469,18 @@ export class OrderService {
     client: { query: (text: string, params?: any[]) => Promise<any> },
     orderId: string
   ): Promise<void> {
+    const effectiveSkipReason = this.getEffectiveSkipReasonSql('oi', 'pt');
+
     await client.query(
       `UPDATE orders
          SET progress = COALESCE(ROUND(
            CAST((
              SELECT COUNT(*)
              FROM order_items oi
+             LEFT JOIN pick_tasks pt ON pt.order_item_id = oi.order_item_id
              WHERE oi.order_id = $1
                AND COALESCE(oi.verified_quantity, 0) >= CASE
-                 WHEN COALESCE(NULLIF(TRIM(oi.skip_reason), ''), NULL) IS NOT NULL
+                 WHEN ${effectiveSkipReason} IS NOT NULL
                    THEN LEAST(oi.quantity, GREATEST(COALESCE(oi.picked_quantity, 0), 0))
                  ELSE oi.quantity
                END
@@ -518,11 +528,20 @@ export class OrderService {
     }
     const client = integration.client;
 
+    const effectiveSkipReason = this.getEffectiveSkipReasonSql('oi', 'pt');
     const orderItemsResult = await query(
-      `SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason
-       FROM order_items
-       WHERE order_id = $1
-       ORDER BY order_item_id`,
+      `SELECT
+         oi.sku,
+         oi.name,
+         oi.quantity,
+         oi.picked_quantity,
+         oi.verified_quantity,
+         oi.status,
+         ${effectiveSkipReason} AS skip_reason
+       FROM order_items oi
+       LEFT JOIN pick_tasks pt ON pt.order_item_id = oi.order_item_id
+       WHERE oi.order_id = $1
+       ORDER BY oi.order_item_id`,
       [orderId]
     );
 
@@ -1837,11 +1856,19 @@ export class OrderService {
       throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
     }
 
+    const effectiveSkipReason = this.getEffectiveSkipReasonSql('oi', 'pt');
     const orderItemsResult = await query(
-      `SELECT order_item_id, sku, quantity, picked_quantity, verified_quantity, skip_reason
-       FROM order_items
-       WHERE order_id = $1
-       ORDER BY order_item_id`,
+      `SELECT
+         oi.order_item_id,
+         oi.sku,
+         oi.quantity,
+         oi.picked_quantity,
+         oi.verified_quantity,
+         ${effectiveSkipReason} AS skip_reason
+       FROM order_items oi
+       LEFT JOIN pick_tasks pt ON pt.order_item_id = oi.order_item_id
+       WHERE oi.order_id = $1
+       ORDER BY oi.order_item_id`,
       [orderId]
     );
 

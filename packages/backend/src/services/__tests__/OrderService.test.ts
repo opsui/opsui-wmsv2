@@ -727,7 +727,11 @@ describe('OrderService', () => {
       orderRepository.update.mockResolvedValue(undefined);
 
       query.mockImplementation((sql: string) => {
-        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+        if (
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.order_item_id,')
+        ) {
           return {
             rows: [
               {
@@ -755,9 +759,9 @@ describe('OrderService', () => {
           };
         }
         if (
-          sql.includes(
-            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
-          )
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.name,')
         ) {
           return {
             rows: [
@@ -829,7 +833,11 @@ describe('OrderService', () => {
       orderRepository.getOrderWithItems.mockResolvedValue(packingOrder);
 
       query.mockImplementation((sql: string) => {
-        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+        if (
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.order_item_id,')
+        ) {
           return {
             rows: [
               { order_item_id: 'oi-001', quantity: 1, verified_quantity: 1, skip_reason: null },
@@ -851,9 +859,9 @@ describe('OrderService', () => {
           };
         }
         if (
-          sql.includes(
-            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
-          )
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.name,')
         ) {
           return {
             rows: [
@@ -929,7 +937,11 @@ describe('OrderService', () => {
       orderRepository.update.mockResolvedValue(undefined);
 
       query.mockImplementation((sql: string, params?: any[]) => {
-        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+        if (
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.order_item_id,')
+        ) {
           return {
             rows: [
               { order_item_id: 'oi-001', quantity: 1, verified_quantity: 1, skip_reason: null },
@@ -951,9 +963,9 @@ describe('OrderService', () => {
           };
         }
         if (
-          sql.includes(
-            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
-          )
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.name,')
         ) {
           return {
             rows: [
@@ -1037,7 +1049,11 @@ describe('OrderService', () => {
       orderRepository.update.mockResolvedValue(undefined);
 
       query.mockImplementation((sql: string) => {
-        if (sql.includes('SELECT order_item_id, sku, quantity, verified_quantity, skip_reason')) {
+        if (
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.order_item_id,')
+        ) {
           return {
             rows: [
               {
@@ -1072,9 +1088,9 @@ describe('OrderService', () => {
           };
         }
         if (
-          sql.includes(
-            'SELECT sku, name, quantity, picked_quantity, verified_quantity, status, skip_reason'
-          )
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.name,')
         ) {
           return {
             rows: [
@@ -1110,6 +1126,141 @@ describe('OrderService', () => {
 
       expect(createItemFulfillment).toHaveBeenCalledWith('1604613', {
         lines: [{ sku: 'SHIP-SKU', itemName: 'Shipped item', quantity: 2 }],
+      });
+    });
+
+    it('should use pick-task skip markers when validating packing completion', async () => {
+      const packingOrder = {
+        ...mockOrder,
+        orderId: 'SO68563',
+        status: OrderStatus.PACKING,
+        packerId: 'packer-123',
+      };
+      const packedOrder = {
+        ...mockOrder,
+        orderId: 'SO68563',
+        status: OrderStatus.PACKED,
+        packedAt: new Date(),
+      };
+      const defaultPoolQuery = jest.fn().mockResolvedValue({
+        rows: [
+          {
+            integration_id: 'INT-AAP-NS01',
+            configuration: {
+              auth: {
+                accountId: 'acc',
+                tokenId: 'tid',
+                tokenSecret: 'tsec',
+                consumerKey: 'ck',
+                consumerSecret: 'cs',
+              },
+            },
+          },
+        ],
+        rowCount: 1,
+      });
+      const getItemFulfillment = jest.fn().mockResolvedValue({ id: '1608490', tranId: 'IF73620' });
+      const createItemFulfillment = jest.fn().mockResolvedValue('1608490');
+      const getItemFulfillmentsBySalesOrder = jest.fn().mockResolvedValue([]);
+
+      NetSuiteClient.mockImplementation(() => ({
+        createItemFulfillment,
+        getItemFulfillment,
+        getItemFulfillmentsBySalesOrder,
+      }));
+
+      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
+
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(packedOrder);
+      orderRepository.update.mockResolvedValue(undefined);
+
+      query.mockImplementation((sql: string) => {
+        if (
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.order_item_id,')
+        ) {
+          return {
+            rows: [
+              {
+                order_item_id: 'oi-001',
+                sku: 'BACKORDER-SKU',
+                quantity: 1,
+                picked_quantity: 0,
+                verified_quantity: 0,
+                skip_reason: 'Backordered',
+              },
+              {
+                order_item_id: 'oi-002',
+                sku: 'SHIP-SKU',
+                quantity: 1,
+                picked_quantity: 1,
+                verified_quantity: 1,
+                skip_reason: null,
+              },
+            ],
+            rowCount: 2,
+          };
+        }
+        if (sql.includes('FROM orders o')) {
+          return {
+            rows: [
+              {
+                organizationId: 'ORG320EDF1',
+                netsuiteSoInternalId: '1605078',
+                netsuiteSoTranId: 'SO68563',
+                netsuiteIfInternalId: null,
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+        if (
+          sql.includes('FROM order_items oi') &&
+          sql.includes('LEFT JOIN pick_tasks pt') &&
+          sql.includes('oi.name,')
+        ) {
+          return {
+            rows: [
+              {
+                sku: 'BACKORDER-SKU',
+                name: 'Backordered item',
+                quantity: 1,
+                picked_quantity: 0,
+                verified_quantity: 0,
+                status: 'PENDING',
+                skip_reason: 'Backordered',
+              },
+              {
+                sku: 'SHIP-SKU',
+                name: 'Packable item',
+                quantity: 1,
+                picked_quantity: 1,
+                verified_quantity: 1,
+                status: 'FULLY_PICKED',
+                skip_reason: null,
+              },
+            ],
+            rowCount: 2,
+          };
+        }
+        if (sql.includes('SELECT netsuite_if_internal_id')) {
+          return { rows: [{ netsuite_if_internal_id: '1608490' }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 1 };
+      });
+
+      const result = await orderService.completePacking('SO68563', 'packer-123');
+
+      expect(result.status).toBe(OrderStatus.PACKED);
+      expect(query).toHaveBeenCalledWith(
+        expect.stringContaining('LEFT JOIN pick_tasks pt ON pt.order_item_id = oi.order_item_id'),
+        ['SO68563']
+      );
+      expect(createItemFulfillment).toHaveBeenCalledWith('1605078', {
+        lines: [{ sku: 'SHIP-SKU', itemName: 'Packable item', quantity: 1 }],
       });
     });
 

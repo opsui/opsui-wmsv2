@@ -36,7 +36,6 @@ import { useAuthStore } from '@/stores';
 import {
   CheckIcon,
   ExclamationCircleIcon,
-  ExclamationTriangleIcon,
   MinusCircleIcon,
   PrinterIcon,
   PencilSquareIcon,
@@ -287,11 +286,6 @@ export function PackingPage() {
   const [showUnclaimModal, setShowUnclaimModal] = useState(false);
   const [isUnclaiming, setIsUnclaiming] = useState(false);
   const [undoLoading, setUndoLoading] = useState<Record<number, boolean>>({});
-
-  const [completeShipmentConfirm, setCompleteShipmentConfirm] = useState<{
-    isOpen: boolean;
-    skippedItems: any[];
-  }>({ isOpen: false, skippedItems: [] });
 
   // Shipping details state
   const [showShippingForm, setShowShippingForm] = useState(false);
@@ -770,14 +764,6 @@ export function PackingPage() {
     };
   }, [order, currentUser, userRole, refetch]);
 
-  // Get current item to verify
-  const currentItem = order?.items?.[currentItemIndex];
-  const currentItemDisplayName = getOrderItemDisplayName(currentItem);
-  const currentItemDescription = getOrderItemDescription(currentItem);
-  const currentItemImage =
-    currentItem?.image ||
-    (currentItem?.sku ? activeOrderItemImageMap[String(currentItem.sku)] : null) ||
-    null;
   const isItemSkipped = (
     item: { status?: string; skipReason?: string | null } | null | undefined
   ) =>
@@ -830,9 +816,43 @@ export function PackingPage() {
       | undefined
   ) => Boolean(item && (item.verifiedQuantity || 0) >= getRequiredPackingQuantity(item));
 
+  const hasPickedPackingQuantity = (
+    item:
+      | {
+          pickedQuantity?: number;
+          quantity?: number;
+          skipReason?: string | null;
+          status?: string;
+        }
+      | null
+      | undefined
+  ) => Math.max(0, Number(item?.pickedQuantity || 0)) > 0;
+
+  const visiblePackingItems = (order?.items || []).filter(
+    item => !isFullySkippedItem(item) && hasPickedPackingQuantity(item)
+  );
+  const visiblePackingItemsImageKey = visiblePackingItems
+    .map(item => `${item.orderItemId}:${item.sku}:${item.image || ''}`)
+    .join('|');
+  const visiblePackingItemsProgressKey = visiblePackingItems
+    .map(
+      item =>
+        `${item.orderItemId}:${item.verifiedQuantity || 0}:${getRequiredPackingQuantity(item)}`
+    )
+    .join('|');
+
+  // Get current item to verify
+  const currentItem = visiblePackingItems[currentItemIndex];
+  const currentItemDisplayName = getOrderItemDisplayName(currentItem);
+  const currentItemDescription = getOrderItemDescription(currentItem);
+  const currentItemImage =
+    currentItem?.image ||
+    (currentItem?.sku ? activeOrderItemImageMap[String(currentItem.sku)] : null) ||
+    null;
+
   // Calculate progress
-  const totalItems = order?.items?.length || 0;
-  const completedItems = order?.items?.filter(item => isPackingItemComplete(item)) || [];
+  const totalItems = visiblePackingItems.length;
+  const completedItems = visiblePackingItems.filter(item => isPackingItemComplete(item));
   const allVerified = completedItems.length === totalItems && totalItems > 0;
   const verifiedCount = completedItems.length;
   const hasCompletedShippingSession =
@@ -842,12 +862,12 @@ export function PackingPage() {
   const areRatesLocked = nzcConnotes.length > 0 || nzcLabels.length > 0 || shipmentCreated;
 
   useEffect(() => {
-    if (!order?.items?.length) {
+    if (!visiblePackingItems.length) {
       setActiveOrderItemImageMap({});
       return;
     }
 
-    const activeItems = order.items as Array<{
+    const activeItems = visiblePackingItems as Array<{
       sku?: string;
       image?: string | null;
     }>;
@@ -895,7 +915,7 @@ export function PackingPage() {
     return () => {
       isCancelled = true;
     };
-  }, [order]);
+  }, [visiblePackingItemsImageKey]);
 
   // Reset current index when order changes
   useEffect(() => {
@@ -908,13 +928,21 @@ export function PackingPage() {
 
   // Auto-select first incomplete item when order loads
   useEffect(() => {
-    if (order && order.items && order.items.length > 0) {
-      const firstIncompleteIndex = order.items.findIndex(item => !isPackingItemComplete(item));
+    if (visiblePackingItems.length > 0) {
+      const firstIncompleteIndex = visiblePackingItems.findIndex(
+        item => !isPackingItemComplete(item)
+      );
       if (firstIncompleteIndex !== -1 && firstIncompleteIndex !== currentItemIndex) {
         setCurrentItemIndex(firstIncompleteIndex);
       }
     }
-  }, [order]);
+  }, [currentItemIndex, visiblePackingItemsProgressKey]);
+
+  useEffect(() => {
+    if (currentItemIndex >= visiblePackingItems.length && visiblePackingItems.length > 0) {
+      setCurrentItemIndex(visiblePackingItems.length - 1);
+    }
+  }, [currentItemIndex, visiblePackingItems.length]);
 
   // Auto-show shipping form when all items are verified
   useEffect(() => {
@@ -1405,12 +1433,12 @@ export function PackingPage() {
    * This allows scanning items in any order
    */
   const findMatchingItem = (scannedValue: string): { item: any; index: number } | null => {
-    if (!order?.items) return null;
+    if (visiblePackingItems.length === 0) return null;
 
-    for (let i = 0; i < order.items.length; i++) {
-      const item = order.items[i];
+    for (let i = 0; i < visiblePackingItems.length; i++) {
+      const item = visiblePackingItems[i];
       const isCompleted = isPackingItemComplete(item);
-      const isSkipped = isFullySkippedItem(item);
+      const isSkipped = isItemSkipped(item);
 
       // Skip completed or skipped items
       if (isCompleted || isSkipped) continue;
@@ -1440,22 +1468,18 @@ export function PackingPage() {
     const matchResult = findMatchingItem(scanValueTrimmed);
 
     if (!matchResult) {
-      // Check if it matches a completed or skipped item for better error message
-      if (order?.items) {
-        for (const item of order.items) {
+      // Check if it matches a completed visible item for better error message
+      if (visiblePackingItems.length > 0) {
+        for (const item of visiblePackingItems) {
           const matchesBarcode = item.barcode && scanValueTrimmed === item.barcode;
           const matchesSku = scanValueTrimmed === item.sku;
           if (matchesBarcode || matchesSku) {
-            if (isFullySkippedItem(item)) {
-              setScanError(
-                `Item was skipped: ${getOrderItemDisplayName(item)}. Revert the skip to verify it.`
-              );
-            } else if (isPackingItemComplete(item)) {
+            if (isPackingItemComplete(item)) {
               setScanError(`Item already fully verified: ${getOrderItemDisplayName(item)}`);
+              playError();
+              showToast('Item already processed', 'warning');
+              return;
             }
-            playError();
-            showToast('Item already processed', 'warning');
-            return;
           }
         }
       }
@@ -1558,7 +1582,9 @@ export function PackingPage() {
         const orderData = queryClient.getQueryData(['orders', orderId]) as any;
         if (!orderData?.items) return;
 
-        const nextIncompleteIndex = orderData.items.findIndex(
+        const visibleOrderItems = orderData.items.filter((item: any) => !isItemSkipped(item));
+
+        const nextIncompleteIndex = visibleOrderItems.findIndex(
           (item: any, idx: number) => idx > matchedIndex && !isPackingItemComplete(item)
         );
 
@@ -1631,7 +1657,9 @@ export function PackingPage() {
       const response = await apiClient.get(`/orders/${orderId}`);
       const latestOrder = response.data;
 
-      const item = latestOrder?.items?.[index];
+      const item = latestOrder?.items?.filter((latestItem: any) => !isItemSkipped(latestItem))?.[
+        index
+      ];
       if (!item) {
         showToast('Item not found', 'error');
         return;
@@ -1744,13 +1772,13 @@ export function PackingPage() {
         });
       }
 
-      await handleCreateShipment(true);
+      await handleCreateShipment();
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to complete packing', 'error');
     }
   };
 
-  const handleCreateShipment = async (skipConfirmCheck = false) => {
+  const handleCreateShipment = async () => {
     if (!selectedCarrierId) {
       showToast('Please select a carrier', 'error');
       return;
@@ -1780,15 +1808,6 @@ export function PackingPage() {
     ) {
       showToast('Please enter a valid number of packages', 'error');
       return;
-    }
-
-    if (!skipConfirmCheck) {
-      const skippedItems = order?.items?.filter(item => isFullySkippedItem(item));
-
-      if (skippedItems && skippedItems.length > 0) {
-        setCompleteShipmentConfirm({ isOpen: true, skippedItems });
-        return;
-      }
     }
 
     setIsCreatingShipment(true);
@@ -2004,7 +2023,7 @@ export function PackingPage() {
   // ==========================================================================
 
   const handleManualOverride = (index: number) => {
-    const item = order?.items?.[index];
+    const item = visiblePackingItems[index];
     if (!item) return;
 
     setOverrideItemIndex(index);
@@ -2015,9 +2034,9 @@ export function PackingPage() {
   };
 
   const handleConfirmOverride = async () => {
-    if (overrideItemIndex === null || !order?.items?.[overrideItemIndex]) return;
+    if (overrideItemIndex === null || !visiblePackingItems[overrideItemIndex]) return;
 
-    const item = order.items[overrideItemIndex];
+    const item = visiblePackingItems[overrideItemIndex];
     const requiredPackingQuantity = getRequiredPackingQuantity(item);
     const quantity = parseInt(overrideQuantity, 10) || 0;
 
@@ -2766,7 +2785,7 @@ export function PackingPage() {
                         variant="success"
                         size="lg"
                         fullWidth
-                        onClick={() => handleCreateShipment()}
+                        onClick={confirmCreateShipment}
                         isLoading={isCreatingShipment}
                         disabled={isCreatingShipment || isViewMode}
                         className="action-button-enhanced touch-target"
@@ -2958,15 +2977,12 @@ export function PackingPage() {
                   {/* Items in Order - Integrated into Current Pack Task */}
                   <div className={`${packingSurfacePanelClass} p-4`}>
                     <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-4">
-                      Items in Order ({order.items?.length || 0})
+                      Items in Order ({visiblePackingItems.length})
                     </p>
                     <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
-                      {order.items?.map((item, index) => {
+                      {visiblePackingItems.map((item, index) => {
                         const requiredPackingQuantity = getRequiredPackingQuantity(item);
-                        const isCompleted =
-                          isPackingItemComplete(item) && !isFullySkippedItem(item);
-                        const isSkipped = isFullySkippedItem(item);
-                        const isBackordered = isItemSkipped(item) && !isSkipped;
+                        const isCompleted = isPackingItemComplete(item);
                         const isCurrent = index === currentItemIndex;
                         const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
 
@@ -2974,20 +2990,13 @@ export function PackingPage() {
                           <div
                             key={item.orderItemId}
                             onClick={() => {
-                              // Allow clicking on any incomplete/non-skipped item to select it
-                              if (!isCompleted && !isSkipped && !isViewMode) {
+                              if (!isCompleted && !isViewMode) {
                                 setCurrentItemIndex(index);
                               }
                             }}
                             className={`pick-item-card flex items-center justify-between p-3 rounded-xl transition-all duration-200 animate-fade-in-up ${
-                              isCurrent
-                                ? 'active'
-                                : isCompleted
-                                  ? 'completed'
-                                  : isSkipped
-                                    ? 'skipped'
-                                    : ''
-                            } ${!isCompleted && !isSkipped && !isViewMode ? 'cursor-pointer' : ''}`}
+                              isCurrent ? 'active' : isCompleted ? 'completed' : ''
+                            } ${!isCompleted && !isViewMode ? 'cursor-pointer' : ''}`}
                             style={{
                               animationDelay: `${index * 30}ms`,
                               animationFillMode: 'backwards',
@@ -3014,12 +3023,7 @@ export function PackingPage() {
                                     <CheckIcon className="h-4 w-4 text-success-400" />
                                   </div>
                                 )}
-                                {isSkipped && (
-                                  <div className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center">
-                                    <ExclamationTriangleIcon className="h-4 w-4 text-warning-400" />
-                                  </div>
-                                )}
-                                {!isCompleted && !isSkipped && (
+                                {!isCompleted && (
                                   <div
                                     className={`w-2.5 h-2.5 rounded-full ${isCurrent ? 'bg-primary-400 status-badge-glow' : 'bg-gray-500'}`}
                                   />
@@ -3032,11 +3036,9 @@ export function PackingPage() {
                                   className={`font-medium text-sm truncate ${
                                     isCompleted
                                       ? 'text-success-300 line-through'
-                                      : isSkipped
-                                        ? 'text-warning-300'
-                                        : isCurrent
-                                          ? 'text-gray-900 dark:text-white'
-                                          : 'text-gray-700 dark:text-gray-300'
+                                      : isCurrent
+                                        ? 'text-gray-900 dark:text-white'
+                                        : 'text-gray-700 dark:text-gray-300'
                                   }`}
                                 >
                                   {getOrderItemDisplayName(item)}
@@ -3050,13 +3052,6 @@ export function PackingPage() {
                                   <p className="text-xs text-gray-500 font-mono truncate">
                                     {item.binLocation}
                                   </p>
-                                  {(isSkipped || isBackordered) && item.skipReason && (
-                                    <p
-                                      className={`text-xs truncate ${isSkipped ? 'text-warning-300' : 'text-primary-300'}`}
-                                    >
-                                      ({item.skipReason})
-                                    </p>
-                                  )}
                                 </div>
                               </div>
                             </div>
@@ -3067,16 +3062,12 @@ export function PackingPage() {
                                 className={`font-semibold text-sm font-mono ${
                                   isCompleted
                                     ? 'text-success-300'
-                                    : isSkipped
-                                      ? 'text-warning-300'
-                                      : isCurrent
-                                        ? 'text-primary-400'
-                                        : 'text-gray-700 dark:text-gray-300'
+                                    : isCurrent
+                                      ? 'text-primary-400'
+                                      : 'text-gray-700 dark:text-gray-300'
                                 }`}
                               >
-                                {isSkipped
-                                  ? 'Skipped'
-                                  : `${item.verifiedQuantity || 0}/${requiredPackingQuantity}`}
+                                {`${item.verifiedQuantity || 0}/${requiredPackingQuantity}`}
                               </p>
 
                               {/* Action buttons - only show for current/selected item */}
@@ -3084,7 +3075,6 @@ export function PackingPage() {
                               {isCurrent &&
                                 !isViewMode &&
                                 !isCompleted &&
-                                !isSkipped &&
                                 (userRole === 'ADMIN' || userRole === 'SUPERVISOR') && (
                                   <button
                                     onClick={e => {
@@ -3098,8 +3088,7 @@ export function PackingPage() {
                                   </button>
                                 )}
                               {(!isViewMode || userRole === 'ADMIN' || userRole === 'SUPERVISOR') &&
-                                (item.verifiedQuantity || 0) > 0 &&
-                                !isSkipped && (
+                                (item.verifiedQuantity || 0) > 0 && (
                                   <button
                                     onClick={e => {
                                       e.stopPropagation();
@@ -3191,34 +3180,6 @@ export function PackingPage() {
           onConfirm={handleConfirmUnclaim}
           orderId={orderId!}
           isLoading={isUnclaiming}
-        />
-
-        {/* Complete Shipment with Skipped Items Confirmation Dialog */}
-        <ConfirmDialog
-          isOpen={completeShipmentConfirm.isOpen}
-          onClose={() => setCompleteShipmentConfirm({ isOpen: false, skippedItems: [] })}
-          onConfirm={confirmCreateShipment}
-          title="Complete Order with Skipped Items"
-          message={
-            <div className="text-left">
-              <p className="mb-3">The following items were skipped and could not be verified:</p>
-              <ul className="list-disc pl-5 mb-3 space-y-1">
-                {completeShipmentConfirm.skippedItems.map((item: any, i: number) => (
-                  <li key={i}>
-                    {getOrderItemDisplayName(item)} ({item.sku}) -{' '}
-                    {item.skipReason || 'No reason provided'}
-                  </li>
-                ))}
-              </ul>
-              <p>
-                Are you sure you want to complete this order? These items will remain unverified.
-              </p>
-            </div>
-          }
-          confirmText="Complete Order"
-          cancelText="Cancel"
-          variant="warning"
-          isLoading={isCreatingShipment}
         />
 
         <ConfirmDialog
@@ -3367,132 +3328,136 @@ export function PackingPage() {
         )}
 
         {/* Manual Override Modal */}
-        {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (
-          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-[120] p-3 sm:p-6 lg:p-8">
-            <div className="scanner-modal-content relative z-[121] w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl">
-              <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
-                <div className="flex items-center justify-between">
-                  <h2 className="picking-title text-lg">Manual Override</h2>
-                  <button
-                    onClick={() => setShowOverrideModal(false)}
-                    className="text-white hover:text-primary-200 transition-colors"
-                  >
-                    <ExclamationCircleIcon className="h-6 w-6" />
-                  </button>
+        {showOverrideModal &&
+          overrideItemIndex !== null &&
+          visiblePackingItems[overrideItemIndex] && (
+            <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-[120] p-3 sm:p-6 lg:p-8">
+              <div className="scanner-modal-content relative z-[121] w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl">
+                <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <h2 className="picking-title text-lg">Manual Override</h2>
+                    <button
+                      onClick={() => setShowOverrideModal(false)}
+                      className="text-white hover:text-primary-200 transition-colors"
+                    >
+                      <ExclamationCircleIcon className="h-6 w-6" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-6 space-y-4 lg:grid lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] lg:gap-6 lg:space-y-0">
-                <div className={packingSurfacePanelClass}>
-                  <div className="flex items-start gap-4">
-                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
-                      {order.items[overrideItemIndex].image ||
-                      activeOrderItemImageMap[order.items[overrideItemIndex].sku] ? (
-                        <img
-                          src={
-                            order.items[overrideItemIndex].image ||
-                            activeOrderItemImageMap[order.items[overrideItemIndex].sku]
-                          }
-                          alt={getOrderItemDisplayName(order.items[overrideItemIndex])}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="picking-title text-gray-900 dark:text-white">
-                        {getOrderItemDisplayName(order.items[overrideItemIndex])}
-                      </p>
-                      {getOrderItemDescription(order.items[overrideItemIndex]) && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {getOrderItemDescription(order.items[overrideItemIndex])}
+                <div className="p-6 space-y-4 lg:grid lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] lg:gap-6 lg:space-y-0">
+                  <div className={packingSurfacePanelClass}>
+                    <div className="flex items-start gap-4">
+                      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                        {visiblePackingItems[overrideItemIndex].image ||
+                        activeOrderItemImageMap[visiblePackingItems[overrideItemIndex].sku] ? (
+                          <img
+                            src={
+                              visiblePackingItems[overrideItemIndex].image ||
+                              activeOrderItemImageMap[visiblePackingItems[overrideItemIndex].sku]
+                            }
+                            alt={getOrderItemDisplayName(visiblePackingItems[overrideItemIndex])}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="picking-title text-gray-900 dark:text-white">
+                          {getOrderItemDisplayName(visiblePackingItems[overrideItemIndex])}
                         </p>
-                      )}
-                      <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
-                        {order.items[overrideItemIndex].sku}
+                        {getOrderItemDescription(visiblePackingItems[overrideItemIndex]) && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {getOrderItemDescription(visiblePackingItems[overrideItemIndex])}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
+                          {visiblePackingItems[overrideItemIndex].sku}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          Required:{' '}
+                          {getRequiredPackingQuantity(visiblePackingItems[overrideItemIndex])} |
+                          Currently Verified:{' '}
+                          {visiblePackingItems[overrideItemIndex].verifiedQuantity || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        New Verified Quantity <span className="text-error-400">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={getRequiredPackingQuantity(visiblePackingItems[overrideItemIndex])}
+                        value={overrideQuantity}
+                        onChange={e => setOverrideQuantity(e.target.value)}
+                        onFocus={e => e.target.select()}
+                        className={`${packingInputClass} font-mono text-lg`}
+                      />
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        Max: {getRequiredPackingQuantity(visiblePackingItems[overrideItemIndex])}{' '}
+                        (cannot exceed required quantity)
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Required: {getRequiredPackingQuantity(order.items[overrideItemIndex])} |
-                        Currently Verified: {order.items[overrideItemIndex].verifiedQuantity || 0}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Reason <span className="text-error-400">*</span>
+                      </label>
+                      <textarea
+                        value={overrideReason}
+                        onChange={e => setOverrideReason(e.target.value)}
+                        rows={3}
+                        className={packingInputClass}
+                        placeholder="e.g., Found damaged item, Correcting count, etc."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Additional Notes (optional)
+                      </label>
+                      <textarea
+                        value={overrideNotes}
+                        onChange={e => setOverrideNotes(e.target.value)}
+                        rows={5}
+                        className={packingInputClass}
+                        placeholder="Any additional details..."
+                      />
+                    </div>
+
+                    <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                      <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
+                        <strong>Note:</strong> This action will be logged and audited. Supervisors
+                        will be able to review this override.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                      New Verified Quantity <span className="text-error-400">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={getRequiredPackingQuantity(order.items[overrideItemIndex])}
-                      value={overrideQuantity}
-                      onChange={e => setOverrideQuantity(e.target.value)}
-                      onFocus={e => e.target.select()}
-                      className={`${packingInputClass} font-mono text-lg`}
-                    />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      Max: {getRequiredPackingQuantity(order.items[overrideItemIndex])} (cannot
-                      exceed required quantity)
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                      Reason <span className="text-error-400">*</span>
-                    </label>
-                    <textarea
-                      value={overrideReason}
-                      onChange={e => setOverrideReason(e.target.value)}
-                      rows={3}
-                      className={packingInputClass}
-                      placeholder="e.g., Found damaged item, Correcting count, etc."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                      Additional Notes (optional)
-                    </label>
-                    <textarea
-                      value={overrideNotes}
-                      onChange={e => setOverrideNotes(e.target.value)}
-                      rows={5}
-                      className={packingInputClass}
-                      placeholder="Any additional details..."
-                    />
-                  </div>
-
-                  <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                    <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
-                      <strong>Note:</strong> This action will be logged and audited. Supervisors
-                      will be able to review this override.
-                    </p>
-                  </div>
+                <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                  <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleConfirmOverride}
+                    isLoading={isOverriding}
+                    disabled={!overrideReason.trim() || parseInt(overrideQuantity) < 0}
+                  >
+                    Apply Override
+                  </Button>
                 </div>
-              </div>
-
-              <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleConfirmOverride}
-                  isLoading={isOverriding}
-                  disabled={!overrideReason.trim() || parseInt(overrideQuantity) < 0}
-                >
-                  Apply Override
-                </Button>
               </div>
             </div>
-          </div>
-        )}
+          )}
       </main>
     </div>
   );
