@@ -901,13 +901,13 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async manualOverride(
-    pickTaskId: string,
+    workItemId: string,
     newQuantity: number,
     reason: string,
     notes: string | undefined,
     userId: string
   ): Promise<{ success: boolean; order: Order; exception: any }> {
-    logger.info('Processing manual override', { pickTaskId, newQuantity, reason, userId });
+    logger.info('Processing manual override', { workItemId, newQuantity, reason, userId });
 
     return orderRepository.withTransaction(async client => {
       // Get pick task
@@ -916,36 +916,152 @@ export class OrderService {
          FROM pick_tasks pt
          JOIN orders o ON pt.order_id = o.order_id
          WHERE pt.pick_task_id = $1 FOR UPDATE`,
-        [pickTaskId]
+        [workItemId]
       );
 
-      if (pickTaskResult.rows.length === 0) {
-        throw new NotFoundError('PickTask', pickTaskId);
+      if (pickTaskResult.rows.length > 0) {
+        const pickTask = pickTaskResult.rows[0];
+        const orderId = pickTask.order_id;
+
+        // Validate order is in PICKING status
+        if (pickTask.order_status !== OrderStatus.PICKING) {
+          throw new ValidationError(
+            `Order is not in PICKING status. Current status: ${pickTask.order_status}`
+          );
+        }
+
+        // Validate new quantity doesn't exceed required quantity (unless override)
+        if (newQuantity > pickTask.quantity) {
+          throw new ValidationError(
+            `New quantity (${newQuantity}) exceeds required quantity (${pickTask.quantity}). Over-scanning is not allowed.`
+          );
+        }
+
+        const previousPickedQty = pickTask.picked_quantity;
+
+        // Generate exception ID
+        const exceptionId = `PEX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Log to picking_exceptions table
+        await client.query(
+          `INSERT INTO picking_exceptions (
+            exception_id, order_id, order_item_id, pick_task_id, user_id, sku,
+            exception_type, original_qty, new_qty, previous_picked_qty, reason, notes, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
+          [
+            exceptionId,
+            orderId,
+            pickTask.order_item_id,
+            workItemId,
+            userId,
+            pickTask.sku,
+            'MANUAL_OVERRIDE',
+            pickTask.quantity,
+            newQuantity,
+            previousPickedQty,
+            reason,
+            notes || null,
+          ]
+        );
+
+        // Update pick task
+        await client.query(
+          `UPDATE pick_tasks
+           SET picked_quantity = $1,
+               status = CASE WHEN $1 >= quantity THEN 'COMPLETED'::task_status ELSE 'IN_PROGRESS'::task_status END,
+               completed_at = CASE WHEN $1 >= quantity THEN NOW() ELSE completed_at END
+           WHERE pick_task_id = $2`,
+          [newQuantity, workItemId]
+        );
+
+        // Update order item
+        const itemStatus =
+          newQuantity >= pickTask.quantity
+            ? 'FULLY_PICKED'
+            : newQuantity > 0
+              ? 'PARTIAL_PICKED'
+              : 'PENDING';
+
+        await client.query(
+          `UPDATE order_items
+           SET picked_quantity = $1,
+               status = $2::order_item_status
+           WHERE order_item_id = $3`,
+          [newQuantity, itemStatus, pickTask.order_item_id]
+        );
+
+        // Recalculate order progress (SKIPPED counts as complete)
+        await client.query(
+          `UPDATE orders
+           SET progress = (
+             SELECT FLOOR(
+               (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
+                NULLIF(COUNT(*), 0)) * 100 + 0.5
+             )
+             FROM pick_tasks pt
+             WHERE pt.order_id = $1
+           )
+           WHERE order_id = $1`,
+          [orderId]
+        );
+
+        // Fetch updated order
+        const updatedOrder = await this.getOrder(orderId);
+
+        logger.info('Manual override completed', {
+          workItemId,
+          orderId,
+          previousPickedQty,
+          newQuantity,
+          exceptionId,
+          mode: 'PICKING',
+        });
+
+        return {
+          success: true,
+          order: updatedOrder,
+          exception: {
+            exceptionId,
+            orderId,
+            sku: pickTask.sku,
+            originalQty: pickTask.quantity,
+            newQty: newQuantity,
+            previousPickedQty,
+            reason,
+          },
+        };
       }
 
-      const pickTask = pickTaskResult.rows[0];
-      const orderId = pickTask.order_id;
+      const orderItemResult = await client.query(
+        `SELECT oi.*, o.status as order_status
+         FROM order_items oi
+         JOIN orders o ON oi.order_id = o.order_id
+         WHERE oi.order_item_id = $1 FOR UPDATE`,
+        [workItemId]
+      );
 
-      // Validate order is in PICKING status
-      if (pickTask.order_status !== OrderStatus.PICKING) {
+      if (orderItemResult.rows.length === 0) {
+        throw new NotFoundError('PickTask', workItemId);
+      }
+
+      const orderItem = orderItemResult.rows[0];
+      const orderId = orderItem.order_id;
+
+      if (orderItem.order_status !== OrderStatus.PACKING) {
         throw new ValidationError(
-          `Order is not in PICKING status. Current status: ${pickTask.order_status}`
+          `Order is not in PACKING status. Current status: ${orderItem.order_status}`
         );
       }
 
-      // Validate new quantity doesn't exceed required quantity (unless override)
-      if (newQuantity > pickTask.quantity) {
+      if (newQuantity > orderItem.quantity) {
         throw new ValidationError(
-          `New quantity (${newQuantity}) exceeds required quantity (${pickTask.quantity}). Over-scanning is not allowed.`
+          `New quantity (${newQuantity}) exceeds required quantity (${orderItem.quantity}). Over-scanning is not allowed.`
         );
       }
 
-      const previousPickedQty = pickTask.picked_quantity;
-
-      // Generate exception ID
+      const previousVerifiedQty = orderItem.verified_quantity ?? 0;
       const exceptionId = `PEX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Log to picking_exceptions table
       await client.query(
         `INSERT INTO picking_exceptions (
           exception_id, order_id, order_item_id, pick_task_id, user_id, sku,
@@ -954,70 +1070,55 @@ export class OrderService {
         [
           exceptionId,
           orderId,
-          pickTask.order_item_id,
-          pickTaskId,
+          orderItem.order_item_id,
+          null,
           userId,
-          pickTask.sku,
+          orderItem.sku,
           'MANUAL_OVERRIDE',
-          pickTask.quantity,
+          orderItem.quantity,
           newQuantity,
-          previousPickedQty,
+          previousVerifiedQty,
           reason,
           notes || null,
         ]
       );
 
-      // Update pick task
-      const isComplete = newQuantity >= pickTask.quantity;
-      await client.query(
-        `UPDATE pick_tasks
-         SET picked_quantity = $1,
-             status = CASE WHEN $1 >= quantity THEN 'COMPLETED'::task_status ELSE 'IN_PROGRESS'::task_status END,
-             completed_at = CASE WHEN $1 >= quantity THEN NOW() ELSE completed_at END
-         WHERE pick_task_id = $2`,
-        [newQuantity, pickTaskId]
-      );
-
-      // Update order item
-      const itemStatus =
-        newQuantity >= pickTask.quantity
-          ? 'FULLY_PICKED'
-          : newQuantity > 0
-            ? 'PARTIAL_PICKED'
-            : 'PENDING';
-
       await client.query(
         `UPDATE order_items
-         SET picked_quantity = $1,
-             status = $2::order_item_status
-         WHERE order_item_id = $3`,
-        [newQuantity, itemStatus, pickTask.order_item_id]
+         SET verified_quantity = $1,
+             status = CASE
+               WHEN status = 'SKIPPED' AND $1 > 0 THEN CASE
+                 WHEN picked_quantity >= quantity THEN 'FULLY_PICKED'::order_item_status
+                 WHEN picked_quantity > 0 THEN 'PARTIAL_PICKED'::order_item_status
+                 ELSE 'PENDING'::order_item_status
+               END
+               ELSE status
+             END,
+             skip_reason = CASE
+               WHEN status = 'SKIPPED' AND $1 > 0 THEN NULL
+               ELSE skip_reason
+             END
+         WHERE order_item_id = $2`,
+        [newQuantity, workItemId]
       );
 
-      // Recalculate order progress (SKIPPED counts as complete)
       await client.query(
-        `UPDATE orders
-         SET progress = (
-           SELECT FLOOR(
-             (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
-              NULLIF(COUNT(*), 0)) * 100 + 0.5
-           )
-           FROM pick_tasks pt
-           WHERE pt.order_id = $1
-         )
-         WHERE order_id = $1`,
+        `UPDATE orders SET progress = COALESCE(ROUND(
+          CAST((SELECT COUNT(*) FILTER (WHERE oi.verified_quantity >= oi.quantity) FROM order_items oi WHERE oi.order_id = $1) AS FLOAT)
+          / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
+        ), 0) WHERE order_id = $1`,
         [orderId]
       );
 
-      // Fetch updated order
       const updatedOrder = await this.getOrder(orderId);
 
       logger.info('Manual override completed', {
-        pickTaskId,
+        workItemId,
         orderId,
-        previousPickedQty,
+        previousVerifiedQty,
         newQuantity,
         exceptionId,
+        mode: 'PACKING',
       });
 
       return {
@@ -1026,10 +1127,10 @@ export class OrderService {
         exception: {
           exceptionId,
           orderId,
-          sku: pickTask.sku,
-          originalQty: pickTask.quantity,
+          sku: orderItem.sku,
+          originalQty: orderItem.quantity,
           newQty: newQuantity,
-          previousPickedQty,
+          previousPickedQty: previousVerifiedQty,
           reason,
         },
       };

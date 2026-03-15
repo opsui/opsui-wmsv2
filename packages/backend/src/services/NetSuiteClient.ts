@@ -272,6 +272,24 @@ export class NetSuiteClient {
     return this.extractTag(match[0], 'value');
   }
 
+  private extractCustomFieldInternalIds(xml: string): Record<string, string> {
+    const idsByScriptId: Record<string, string> = {};
+    const regex = /<(?:[\w-]+:)?customField\b([^>]*)>/gi;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(xml)) !== null) {
+      const attrs = match[1] || '';
+      const scriptId = attrs.match(/\bscriptId="([^"]+)"/i)?.[1];
+      const internalId = attrs.match(/\binternalId="([^"]+)"/i)?.[1];
+
+      if (scriptId && internalId) {
+        idsByScriptId[scriptId] = internalId;
+      }
+    }
+
+    return idsByScriptId;
+  }
+
   private extractAllRecords(xml: string): string[] {
     const records: string[] = [];
     // Match <platformCore:record ...>...</platformCore:record> or any namespaced record tag
@@ -1013,14 +1031,30 @@ export class NetSuiteClient {
   async updateSalesOrderStatus(id: string, updates: Record<string, unknown>): Promise<void> {
     const standardFields: string[] = [];
     const customFields: string[] = [];
+    const customFieldUpdates = Object.keys(updates).filter(key => /^custbody/i.test(key));
+    let customFieldInternalIds: Record<string, string> = {};
+
+    if (customFieldUpdates.length > 0) {
+      try {
+        const salesOrderResponse = await this.getSalesOrderResponseXml(id);
+        customFieldInternalIds = this.extractCustomFieldInternalIds(salesOrderResponse);
+      } catch (error: any) {
+        logger.warn('Failed to load sales order custom field metadata before update', {
+          salesOrderId: id,
+          customFields: customFieldUpdates,
+          error: error.message,
+        });
+      }
+    }
 
     for (const [key, value] of Object.entries(updates)) {
       if (/^custbody/i.test(key)) {
         const customFieldType =
           typeof value === 'boolean' ? 'BooleanCustomFieldRef' : 'StringCustomFieldRef';
+        const internalId = customFieldInternalIds[key];
         customFields.push(
           [
-            `      <platformCore:customField xsi:type="platformCore:${customFieldType}" scriptId="${this.escapeXml(key)}">`,
+            `      <platformCore:customField${internalId ? ` internalId="${this.escapeXml(internalId)}"` : ''} scriptId="${this.escapeXml(key)}" xsi:type="platformCore:${customFieldType}">`,
             `        <platformCore:value>${this.escapeXml(String(value))}</platformCore:value>`,
             '      </platformCore:customField>',
           ].join('\n')
@@ -1052,6 +1086,26 @@ export class NetSuiteClient {
         this.extractTag(response, 'faultstring') || this.extractTag(response, 'message');
       throw new Error(`Failed to update sales order ${id}: ${fault || 'Unknown error'}`);
     }
+  }
+
+  private async getSalesOrderResponseXml(id: string): Promise<string> {
+    const body = [
+      '<tns:get>',
+      '  <tns:baseRef xsi:type="platformCore:RecordRef"',
+      `    type="salesOrder" internalId="${this.escapeXml(id)}"/>`,
+      '</tns:get>',
+    ].join('\n');
+
+    const envelope = this.buildEnvelope('', body);
+    const response = await this.soapRequest('get', envelope);
+
+    if (!response.includes('isSuccess="true"')) {
+      const fault =
+        this.extractTag(response, 'faultstring') || this.extractTag(response, 'message');
+      throw new Error(`Failed to fetch sales order ${id}: ${fault || 'Unknown error'}`);
+    }
+
+    return response;
   }
 
   /**

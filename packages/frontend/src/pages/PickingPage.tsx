@@ -25,6 +25,10 @@ import {
   UndoPickModal,
   useToast,
 } from '@/components/shared';
+import {
+  FulfillmentPackingSlip,
+  printFulfillmentSlipElement,
+} from '@/components/orders/FulfillmentPackingSlip';
 import { ResponsiveContainer } from '@/components/shared/ResponsiveContainer';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
@@ -42,11 +46,8 @@ import {
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
-  CalendarDaysIcon,
   CheckIcon,
-  ClipboardDocumentListIcon,
   CubeIcon,
-  DocumentChartBarIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   ForwardIcon,
@@ -58,7 +59,7 @@ import {
   WrenchScrewdriverIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { Address, ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
+import { ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -162,11 +163,6 @@ const pickingSurfacePanelClass =
 const pickingInputClass =
   'w-full px-4 py-3 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500';
 
-// Professional blue theme colors for the fulfillment slip
-const fulfillmentSlipPrimaryColor = '#0f4c81'; // deep document blue
-const fulfillmentSlipSecondaryColor = '#3b82a6'; // muted steel blue
-const fulfillmentSlipAccentColor = '#1e3a5f'; // dark navy accent
-const fulfillmentSlipHeaderColor = '#16324f'; // table/header navy
 const code39Patterns: Record<string, string> = {
   '0': 'nnnwwnwnn',
   '1': 'wnnwnnnnw',
@@ -250,46 +246,6 @@ const buildCode39Barcode = (value?: string | null) => {
     segments,
     totalWidth,
   };
-};
-
-const extractNetSuiteAccountNumber = (customerName?: string | null, customerId?: string | null) => {
-  const trimmedCustomerName = customerName?.trim() || '';
-  const accountMatch = trimmedCustomerName.match(/^(\d{3,})\b/);
-
-  if (accountMatch) {
-    return {
-      accountNumber: accountMatch[1],
-      caption: 'NetSuite customer number',
-    };
-  }
-
-  return {
-    accountNumber: customerId?.trim() || '-',
-    caption: 'NetSuite internal customer ID',
-  };
-};
-
-const chunkFulfillmentSlipItems = <T,>(
-  items: T[],
-  firstPageSize: number,
-  continuationPageSize: number
-): T[][] => {
-  if (items.length === 0) {
-    return [[]];
-  }
-
-  const pages: T[][] = [];
-  let cursor = 0;
-
-  pages.push(items.slice(cursor, cursor + firstPageSize));
-  cursor += firstPageSize;
-
-  while (cursor < items.length) {
-    pages.push(items.slice(cursor, cursor + continuationPageSize));
-    cursor += continuationPageSize;
-  }
-
-  return pages;
 };
 
 const renderBarcodeDimensions = (
@@ -378,51 +334,6 @@ const createBarcodePngDataUrl = (
   return canvas.toDataURL('image/png');
 };
 
-const formatNetSuiteDisplayText = (value?: string | null): string => {
-  if (!value) {
-    return '';
-  }
-
-  return value
-    .trim()
-    .replace(/^_+/, '')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/\b\w/g, char => char.toUpperCase());
-};
-
-interface AddressLine {
-  label: string;
-  value: string;
-}
-
-const formatAddressLines = (address?: Address | null): AddressLine[] => {
-  if (!address) {
-    return [];
-  }
-
-  const lines: { label: string; value: string | undefined | null }[] = [
-    { label: 'Name', value: address.name },
-    { label: 'Company', value: address.company },
-    { label: 'Address', value: address.addressLine1 },
-    { label: '', value: address.addressLine2 },
-    { label: 'City', value: address.city },
-    { label: 'State', value: address.state },
-    { label: 'Postal Code', value: address.postalCode },
-    { label: 'Country', value: formatNetSuiteDisplayText(address.country) },
-  ];
-
-  return lines
-    .map(line => ({
-      label: line.label,
-      value: typeof line.value === 'string' ? line.value.trim() : '',
-    }))
-    .filter(line => line.value);
-};
-
-const fulfillmentSlipLogoUrl = '/arrowhead-logo.png';
-
 export function PickingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
@@ -491,6 +402,8 @@ export function PickingPage() {
       : typeof returnToFromSearch === 'string' && returnToFromSearch.length > 0
         ? returnToFromSearch
         : '/orders?status=PICKING';
+  const shouldAutoPrintFromSearch =
+    new URLSearchParams(location.search).get('printFulfillmentSlip') === '1';
   const pickingTaskStorageKey = orderId ? `picking-current-task:${orderId}` : null;
   const fulfillmentPreviewStorageKey = orderId ? `picking-fulfillment-preview:${orderId}` : null;
 
@@ -663,7 +576,9 @@ export function PickingPage() {
 
     hasHydratedFulfillmentPreviewRef.current = true;
 
-    const savedPreview = sessionStorage.getItem(fulfillmentPreviewStorageKey);
+    const savedPreview =
+      sessionStorage.getItem(fulfillmentPreviewStorageKey) ||
+      localStorage.getItem(fulfillmentPreviewStorageKey);
     if (!savedPreview) {
       return;
     }
@@ -671,7 +586,11 @@ export function PickingPage() {
     try {
       const parsedPreview = JSON.parse(savedPreview);
       if (parsedPreview?.orderId === orderId) {
+        if (shouldAutoPrintFromSearch) {
+          autoPrintFulfillmentRef.current = true;
+        }
         setFulfillmentPreviewOrder(parsedPreview);
+        localStorage.removeItem(fulfillmentPreviewStorageKey);
         return;
       }
     } catch {
@@ -679,7 +598,8 @@ export function PickingPage() {
     }
 
     sessionStorage.removeItem(fulfillmentPreviewStorageKey);
-  }, [fulfillmentPreviewStorageKey, orderId]);
+    localStorage.removeItem(fulfillmentPreviewStorageKey);
+  }, [fulfillmentPreviewStorageKey, orderId, shouldAutoPrintFromSearch]);
 
   // If the order is back in PICKING status (e.g. re-opened after being reset), clear any stale
   // fulfillment preview that may have been hydrated from sessionStorage.
@@ -853,190 +773,17 @@ export function PickingPage() {
     setFulfillmentItemBarcodeImageMap(itemBarcodeImages);
   }, [fulfillmentPreviewOrder]);
 
-  const fulfillmentSlipPrintStyles = `
-    @page { size: A4 landscape; margin: 10mm; }
-    html, body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background: white !important;
-      color: black !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      color-adjust: exact !important;
-    }
-    body.fulfillment-slip-print-preview {
-      overflow: hidden !important;
-    }
-    #fulfillment-slip-actions,
-    .print-hide {
-      display: none !important;
-    }
-    #fulfillment-slip-print {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      background: white !important;
-    }
-    #fulfillment-slip-print,
-    #fulfillment-slip-print * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      color-adjust: exact !important;
-    }
-    #fulfillment-slip-print svg[role="img"] {
-      max-width: none !important;
-      flex: none !important;
-      width: auto !important;
-      height: auto !important;
-    }
-    .fulfillment-slip-page {
-      background: white;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 25px 50px -12px rgba(15, 76, 129, 0.12);
-      border-radius: 16px;
-      overflow: hidden;
-    }
-    .fulfillment-slip-page:last-child {
-      margin-bottom: 0;
-    }
-    .opsui-gradient-header {
-      background: linear-gradient(135deg, #16324f 0%, #0f4c81 50%, #0b3b63 100%);
-    }
-    .opsui-accent-bar {
-      background: linear-gradient(90deg, #3b82a6 0%, #0f4c81 25%, #16324f 50%, #0f4c81 75%, #3b82a6 100%);
-    }
-    .opsui-badge {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      border: 1px solid #cbd5e1;
-    }
-    .opsui-section-card {
-      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-      border: 1px solid #dbe5ef;
-      border-radius: 12px;
-    }
-    .opsui-table-header {
-      background: linear-gradient(135deg, #16324f 0%, #0f4c81 100%);
-    }
-    body.fulfillment-slip-print-preview .fulfillment-slip-page {
-      margin-bottom: 0 !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      break-after: page;
-      page-break-after: always;
-    }
-    body.fulfillment-slip-print-preview .fulfillment-slip-page:last-child {
-      break-after: auto;
-      page-break-after: auto;
-    }
-    body.fulfillment-slip-print-preview .opsui-gradient-header,
-    body.fulfillment-slip-print-preview .opsui-accent-bar,
-    body.fulfillment-slip-print-preview .opsui-table-header,
-    body.fulfillment-slip-print-preview .fulfillment-slip-print-color {
-      background-image: none !important;
-      box-shadow: none !important;
-    }
-    body.fulfillment-slip-print-preview .opsui-accent-bar {
-      background-color: #1e3a5f !important;
-    }
-    body.fulfillment-slip-print-preview .opsui-badge,
-    body.fulfillment-slip-print-preview .rounded-xl,
-    body.fulfillment-slip-print-preview .rounded-lg,
-    body.fulfillment-slip-print-preview .rounded-md,
-    body.fulfillment-slip-print-preview .rounded-full {
-      border-radius: 6px !important;
-      box-shadow: none !important;
-    }
-    body.fulfillment-slip-print-preview .bg-gradient-to-r,
-    body.fulfillment-slip-print-preview .bg-clip-text,
-    body.fulfillment-slip-print-preview .text-transparent {
-      background-image: none !important;
-      color: #0f172a !important;
-      -webkit-text-fill-color: #0f172a !important;
-    }
-    body.fulfillment-slip-print-preview .fulfillment-slip-item-image {
-      display: none !important;
-    }
-    body.fulfillment-slip-print-preview .fulfillment-slip-item-meta {
-      padding-left: 0 !important;
-    }
-  `;
-
   const handlePrintFulfillmentSlip = useCallback(async () => {
-    const slipElement = document.getElementById('fulfillment-slip-print');
-    if (!slipElement) {
-      showToast('Packing slip preview is not ready yet', 'error');
-      return;
-    }
-
     setIsPrintingFulfillmentSlip(true);
 
     try {
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(iframe);
-
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!doc || !iframe.contentWindow) {
-        if (iframe.parentNode) {
-          iframe.parentNode.removeChild(iframe);
-        }
-        throw new Error('Unable to open print document');
-      }
-
-      const copiedHeadMarkup = Array.from(
-        document.head.querySelectorAll('link[rel="stylesheet"], style')
-      )
-        .filter(node => {
-          if (node.tagName === 'LINK') {
-            return true;
-          }
-
-          const viteDevId = node.getAttribute('data-vite-dev-id');
-          return Boolean(
-            viteDevId && (viteDevId.includes('/src/') || viteDevId.includes('/node_modules/'))
-          );
-        })
-        .map(node => node.outerHTML)
-        .join('\n');
-
-      doc.open();
-      doc.write(`
-        <!doctype html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <title>Fulfillment Packing Slip</title>
-            ${copiedHeadMarkup}
-            <style>${fulfillmentSlipPrintStyles}</style>
-          </head>
-          <body class="fulfillment-slip-print-preview">
-            ${slipElement.outerHTML}
-          </body>
-        </html>
-      `);
-      doc.close();
-
-      iframe.onload = () => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        setTimeout(() => {
-          if (iframe.parentNode) {
-            iframe.parentNode.removeChild(iframe);
-          }
-        }, 1000);
-      };
+      await printFulfillmentSlipElement('fulfillment-slip-print');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to print packing slip', 'error');
     } finally {
       setIsPrintingFulfillmentSlip(false);
     }
-  }, [fulfillmentSlipPrintStyles, showToast]);
+  }, [showToast]);
 
   // Claim order on page mount if not already claimed
   // Use useLayoutEffect to ensure ref updates happen synchronously before React StrictMode's second invocation
@@ -2009,102 +1756,15 @@ export function PickingPage() {
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   if (fulfillmentPreviewOrder) {
-    const previewAddressLines = formatAddressLines(fulfillmentPreviewOrder.shippingAddress);
-    const billToLines = previewAddressLines;
-    const orderDate = fulfillmentPreviewOrder.netsuiteOrderDate
-      ? new Date(fulfillmentPreviewOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
-      : new Date().toLocaleDateString('en-NZ');
-    const shippingMethodLabel = formatNetSuiteDisplayText(
-      fulfillmentPreviewOrder.shippingMethod || fulfillmentPreviewOrder.carrier || 'Not specified'
-    );
-    const accountNumberDetails = extractNetSuiteAccountNumber(
-      fulfillmentPreviewOrder.customerName,
-      fulfillmentPreviewOrder.customerId
-    );
-    const salesOrderBarcode = buildCode39Barcode(
-      fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId
-    );
-    const salesOrderBarcodeSize = salesOrderBarcode
-      ? renderBarcodeDimensions(salesOrderBarcode.totalWidth, 38, 0.33, 12.5)
-      : null;
     const pickedByLabel =
       fulfillmentPreviewOrder.pickerName ||
       (fulfillmentPreviewOrder.pickerId === currentUser.userId ? currentUser.name : null) ||
       currentUser.name ||
       fulfillmentPreviewOrder.pickerId ||
       'Unknown';
-    const allFulfillmentItems = fulfillmentPreviewOrder.items || [];
-    const slipPages = chunkFulfillmentSlipItems(allFulfillmentItems, 2, 4);
-    const totalSlipPages = slipPages.length;
 
     return (
       <div className="min-h-screen">
-        <style>{`
-          .fulfillment-slip-page {
-            background: white;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(15, 76, 129, 0.12);
-            border-radius: 16px;
-            overflow: hidden;
-          }
-
-          .fulfillment-slip-page:last-child {
-            margin-bottom: 0;
-          }
-
-          .opsui-gradient-header {
-            background: linear-gradient(135deg, #16324f 0%, #0f4c81 50%, #0b3b63 100%);
-          }
-
-          .opsui-accent-bar {
-            background: linear-gradient(90deg, #3b82a6 0%, #0f4c81 25%, #16324f 50%, #0f4c81 75%, #3b82a6 100%);
-          }
-
-          .opsui-badge {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border: 1px solid #cbd5e1;
-          }
-
-          .opsui-section-card {
-            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-            border: 1px solid #dbe5ef;
-            border-radius: 12px;
-          }
-
-          .opsui-table-header {
-            background: linear-gradient(135deg, #16324f 0%, #0f4c81 100%);
-          }
-
-          @media print {
-            @page { size: A4 landscape; margin: 10mm; }
-            html, body {
-              background: white !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-
-            .fulfillment-slip-page {
-              margin-bottom: 0 !important;
-              box-shadow: none !important;
-              border-radius: 0 !important;
-              break-after: page;
-              page-break-after: always;
-            }
-
-            .fulfillment-slip-page:last-child {
-              break-after: auto;
-              page-break-after: auto;
-            }
-
-            .opsui-gradient-header,
-            .opsui-accent-bar,
-            .opsui-table-header {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-          }
-        `}</style>
-
         <Header />
         <ResponsiveContainer variant="fluid" padding="lg">
           <main className="relative z-10 space-y-responsive">
@@ -2112,794 +1772,20 @@ export function PickingPage() {
               items={[
                 { label: 'Picking Queue', path: pickingQueuePath },
                 {
-                  label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}`,
+                  label: Fulfillment,
                 },
               ]}
             />
 
             <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
-              <div id="fulfillment-slip-print" className="bg-white text-slate-900">
-                <section className="fulfillment-slip-page">
-                  {/* Header Section */}
-                  <div className="relative">
-                    {/* Professional blue accent stripe */}
-                    <div className="opsui-accent-bar h-2" />
+              <FulfillmentPackingSlip
+                order={fulfillmentPreviewOrder}
+                pickedByLabel={pickedByLabel}
+                salesOrderBarcodeImage={salesOrderBarcodeImage}
+                itemImageMap={fulfillmentItemImageMap}
+                itemBarcodeImageMap={fulfillmentItemBarcodeImageMap}
+              />
 
-                    <div className="px-8 py-6">
-                      <div className="flex items-start justify-between gap-8">
-                        {/* Logo & Company */}
-                        <div className="flex items-start gap-5">
-                          <img
-                            src={fulfillmentSlipLogoUrl}
-                            alt="Arrowhead Alarm Products"
-                            className="fulfillment-slip-brand-logo w-36 h-auto"
-                          />
-                          <div className="pt-1 text-sm leading-relaxed">
-                            <p className="font-bold text-gray-900 print:text-black">
-                              Arrowhead Alarm Products
-                            </p>
-                            <p className="text-gray-600 print:text-black">1A Emirali Road</p>
-                            <p className="text-gray-600 print:text-black">
-                              Silverdale 0932, Auckland
-                            </p>
-                            <p className="text-gray-600 print:text-black">New Zealand</p>
-                          </div>
-                        </div>
-
-                        {/* Document Title */}
-                        <div className="ml-auto min-w-[20rem] max-w-[24rem]">
-                          <div className="flex items-start justify-between gap-6">
-                            <div className="text-center">
-                              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-sky-900 text-xs font-bold uppercase tracking-wider print:bg-slate-50 print:text-sky-950">
-                                <span className="w-1.5 h-1.5 rounded-full bg-sky-800 print:bg-sky-900" />
-                                Fulfillment Document
-                              </div>
-                              <h1 className="mt-2 text-4xl font-black tracking-tight bg-gradient-to-r from-sky-950 via-slate-700 to-sky-900 bg-clip-text text-transparent print:text-sky-950">
-                                Packing Slip
-                              </h1>
-                              <div className="mt-3 flex justify-center">
-                                <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-slate-50 print:border-slate-300">
-                                  <CalendarDaysIcon className="h-4 w-4 text-sky-800 print:text-sky-900" />
-                                  <span className="text-sm font-semibold text-sky-950 print:text-sky-950">
-                                    {orderDate}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
-                                {`Page 1 of ${totalSlipPages}`}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Order Info Grid */}
-                  <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                          Sales Order
-                        </p>
-                        <p className="font-mono font-semibold text-slate-900 print:text-black">
-                          {fulfillmentPreviewOrder.netsuiteSoTranId ||
-                            fulfillmentPreviewOrder.orderId}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                          Fulfillment #
-                        </p>
-                        <p className="font-mono font-semibold text-slate-900 print:text-black">
-                          {fulfillmentPreviewOrder.netsuiteIfTranId ||
-                            fulfillmentPreviewOrder.netsuiteSoTranId ||
-                            fulfillmentPreviewOrder.orderId}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                          Customer PO
-                        </p>
-                        <p className="font-mono font-semibold text-slate-900 print:text-black">
-                          {fulfillmentPreviewOrder.customerPoNumber || '—'}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                          Account #
-                        </p>
-                        <p className="font-mono font-semibold text-slate-900 print:text-black">
-                          {accountNumberDetails.accountNumber}
-                        </p>
-                        <p className="mt-1 text-[10px] text-slate-500 print:text-black">
-                          {accountNumberDetails.caption}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {salesOrderBarcode && (
-                    <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
-                      <div className="flex justify-center">
-                        <div className="rounded-lg border border-slate-200 bg-white px-5 py-3 print:border-gray-400">
-                          {salesOrderBarcodeImage ? (
-                            <img
-                              src={salesOrderBarcodeImage}
-                              alt={`Barcode ${salesOrderBarcode.displayValue}`}
-                              className="block"
-                              style={{
-                                width: salesOrderBarcodeSize?.widthMm,
-                                height: salesOrderBarcodeSize?.heightMm,
-                              }}
-                            />
-                          ) : (
-                            <svg
-                              aria-label={`Barcode ${salesOrderBarcode.displayValue}`}
-                              className="block"
-                              width={salesOrderBarcodeSize?.widthMm}
-                              height={salesOrderBarcodeSize?.heightMm}
-                              style={{
-                                width: salesOrderBarcodeSize?.widthMm,
-                                height: salesOrderBarcodeSize?.heightMm,
-                              }}
-                              viewBox={`0 0 ${salesOrderBarcode.totalWidth} 38`}
-                              preserveAspectRatio="xMidYMid meet"
-                              role="img"
-                              shapeRendering="crispEdges"
-                            >
-                              {(() => {
-                                let currentX = salesOrderBarcode.quietZone;
-
-                                return salesOrderBarcode.segments.map((segment, index) => {
-                                  const rect = segment.isBar ? (
-                                    <rect
-                                      key={`barcode-${index}`}
-                                      x={currentX}
-                                      y={0}
-                                      width={segment.width}
-                                      height={38}
-                                      fill="#111827"
-                                    />
-                                  ) : null;
-
-                                  currentX += segment.width;
-                                  return rect;
-                                });
-                              })()}
-                            </svg>
-                          )}
-                          <p className="mt-1 text-center font-mono text-lg font-semibold tracking-tight text-slate-900 print:text-black">
-                            {salesOrderBarcode.displayValue}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Addresses Section */}
-                  <div className="px-8 py-6">
-                    <div className="grid md:grid-cols-2 gap-8">
-                      {/* Ship To */}
-                      <div className="relative">
-                        <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-600 to-slate-500 rounded-full print:bg-gray-500" />
-                        <div className="flex items-center gap-2 mb-3">
-                          <TruckIcon className="h-5 w-5 text-slate-600 print:text-gray-600" />
-                          <h2 className="text-lg font-bold text-slate-900 print:text-black">
-                            Ship To
-                          </h2>
-                        </div>
-                        <div className="space-y-1 text-sm pl-1">
-                          {previewAddressLines.length > 0 ? (
-                            previewAddressLines.map((line, i) => (
-                              <p key={`ship-${i}`} className="text-gray-800 print:text-black">
-                                {line.label ? (
-                                  <>
-                                    <span className="font-medium text-gray-600 print:text-black">
-                                      {line.label}:
-                                    </span>{' '}
-                                    {line.value}
-                                  </>
-                                ) : (
-                                  line.value
-                                )}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="text-gray-600 italic print:text-black">
-                              No shipping details available
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Bill To */}
-                      <div className="relative">
-                        <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-500 to-slate-400 rounded-full print:bg-gray-400" />
-                        <div className="flex items-center gap-2 mb-3">
-                          <DocumentChartBarIcon className="h-5 w-5 text-slate-500 print:text-gray-600" />
-                          <h2 className="text-lg font-bold text-slate-900 print:text-black">
-                            Bill To
-                          </h2>
-                        </div>
-                        <div className="space-y-1 text-sm pl-1">
-                          {billToLines.length > 0 ? (
-                            billToLines.map((line, i) => (
-                              <p key={`bill-${i}`} className="text-gray-800 print:text-black">
-                                {line.label ? (
-                                  <>
-                                    <span className="font-medium text-gray-600 print:text-black">
-                                      {line.label}:
-                                    </span>{' '}
-                                    {line.value}
-                                  </>
-                                ) : (
-                                  line.value
-                                )}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="text-gray-600 italic print:text-black">
-                              Same as shipping address
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Shipping Method Badge */}
-                    <div className="mt-6 flex items-center gap-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-600 print:text-black">
-                        Shipping Method
-                      </span>
-                      <span
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold fulfillment-slip-print-color"
-                        style={{ backgroundColor: '#e5e7eb', color: '#1f2937' }}
-                      >
-                        <TruckIcon className="h-3.5 w-3.5" />
-                        {shippingMethodLabel}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Items Table */}
-                  <div className="px-8 pb-6">
-                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none print:border-gray-400">
-                      {/* Table Header */}
-                      <div
-                        className="fulfillment-slip-print-color"
-                        style={{ backgroundColor: fulfillmentSlipHeaderColor }}
-                      >
-                        <div
-                          className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider"
-                          style={{ color: '#ffffff' }}
-                        >
-                          <span className="col-span-4">Item / SKU</span>
-                          <span className="col-span-5">Description</span>
-                          <span className="col-span-1 text-center">Ord</span>
-                          <span className="col-span-1 text-center">B/O</span>
-                          <span className="col-span-1 text-center">Shipped</span>
-                        </div>
-                      </div>
-
-                      {/* Table Body */}
-                      <div className="divide-y divide-slate-200 print:divide-gray-300">
-                        {slipPages[0].map((item: any, idx: number) => {
-                          const itemImage = item.image || fulfillmentItemImageMap[item.sku] || null;
-
-                          return (
-                            <div
-                              key={item.orderItemId}
-                              className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
-                                idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                              } print:bg-white`}
-                            >
-                              <div className="col-span-4 flex items-start gap-3">
-                                <div className="fulfillment-slip-item-image h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
-                                  {itemImage ? (
-                                    <img
-                                      src={itemImage}
-                                      alt={item.name || item.sku}
-                                      className="h-full w-full object-contain"
-                                    />
-                                  ) : (
-                                    <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-400 print:text-gray-500">
-                                      No Image
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="fulfillment-slip-item-meta min-w-0">
-                                  <p className="font-mono font-bold text-slate-900 print:text-black">
-                                    {item.sku}
-                                  </p>
-                                  <p className="mt-0.5 text-xs text-slate-600 print:text-black">
-                                    Bin: {formatBinLocation(item.binLocation)}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="col-span-5">
-                                <p className="text-slate-800 font-medium print:text-black">
-                                  {getOrderItemDisplayName(item)}
-                                </p>
-                                {getOrderItemDescription(item) && (
-                                  <p className="mt-1 text-xs leading-relaxed text-slate-600 print:text-black">
-                                    {getOrderItemDescription(item)}
-                                  </p>
-                                )}
-                                {item.barcode && (
-                                  <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
-                                    {(() => {
-                                      const itemBarcode = buildCode39Barcode(item.barcode);
-                                      const itemBarcodeSize = itemBarcode
-                                        ? renderBarcodeDimensions(
-                                            itemBarcode.totalWidth,
-                                            32,
-                                            0.22,
-                                            7.5
-                                          )
-                                        : null;
-                                      const itemBarcodeImage =
-                                        fulfillmentItemBarcodeImageMap[String(item.orderItemId)] ||
-                                        null;
-                                      if (!itemBarcode) {
-                                        return (
-                                          <p className="font-mono text-xs text-slate-600 print:text-black">
-                                            Barcode: {item.barcode}
-                                          </p>
-                                        );
-                                      }
-
-                                      return (
-                                        <>
-                                          {itemBarcodeImage && itemBarcodeSize ? (
-                                            <img
-                                              src={itemBarcodeImage}
-                                              alt={`Item barcode ${itemBarcode.displayValue}`}
-                                              className="block"
-                                              style={{
-                                                width: itemBarcodeSize.widthMm,
-                                                height: itemBarcodeSize.heightMm,
-                                              }}
-                                            />
-                                          ) : (
-                                            <svg
-                                              aria-label={`Item barcode ${itemBarcode.displayValue}`}
-                                              className="block"
-                                              width={itemBarcodeSize?.widthMm}
-                                              height={itemBarcodeSize?.heightMm}
-                                              style={{
-                                                width: itemBarcodeSize?.widthMm,
-                                                height: itemBarcodeSize?.heightMm,
-                                              }}
-                                              viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
-                                              preserveAspectRatio="xMidYMid meet"
-                                              role="img"
-                                              shapeRendering="crispEdges"
-                                            >
-                                              {(() => {
-                                                let currentX = itemBarcode.quietZone;
-
-                                                return itemBarcode.segments.map(
-                                                  (segment, index) => {
-                                                    const rect = segment.isBar ? (
-                                                      <rect
-                                                        key={`item-barcode-${item.orderItemId}-${index}`}
-                                                        x={currentX}
-                                                        y={0}
-                                                        width={segment.width}
-                                                        height={32}
-                                                        fill="#111827"
-                                                      />
-                                                    ) : null;
-
-                                                    currentX += segment.width;
-                                                    return rect;
-                                                  }
-                                                );
-                                              })()}
-                                            </svg>
-                                          )}
-                                          <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
-                                            {itemBarcode.displayValue}
-                                          </p>
-                                        </>
-                                      );
-                                    })()}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
-                                {item.quantity}
-                              </div>
-                              <div className="col-span-1 text-center text-slate-600 print:text-black">
-                                {Math.max(0, item.quantity - (item.pickedQuantity || 0))}
-                              </div>
-                              <div className="col-span-1 text-center">
-                                <span
-                                  className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
-                                  style={{ backgroundColor: '#d1d5db', color: '#111827' }}
-                                >
-                                  {item.pickedQuantity}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {totalSlipPages === 1 && (
-                        <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                              <ClipboardDocumentListIcon className="h-4 w-4" />
-                              <span>Total Items:</span>
-                              <span className="font-bold text-slate-900 print:text-black">
-                                {allFulfillmentItems.reduce(
-                                  (sum: number, item: any) => sum + item.pickedQuantity,
-                                  0
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                              <span>SKUs:</span>
-                              <span className="font-bold text-slate-900 print:text-black">
-                                {allFulfillmentItems.length}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </section>
-
-                {/* Footer Section */}
-                {totalSlipPages === 1 && (
-                  <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
-                    <div className="flex items-end justify-between">
-                      {/* Picked By */}
-                      <div className="text-sm">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                          Picked By
-                        </p>
-                        <p className="font-semibold text-slate-900 print:text-black">
-                          {pickedByLabel}
-                        </p>
-                        <p className="text-slate-700 text-xs mt-1 print:text-black">
-                          {new Date().toLocaleString('en-NZ', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-
-                      {/* Signature Areas */}
-                      <div className="flex gap-12">
-                        <div className="text-center">
-                          <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                            Packed By
-                          </p>
-                          <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Document Footer */}
-                {totalSlipPages === 1 && (
-                  <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
-                    <p className="text-center text-xs text-slate-600 print:text-black">
-                      This document was generated electronically from OpsUI Warehouse Management
-                      System
-                    </p>
-                  </div>
-                )}
-
-                {slipPages.slice(1).map((pageItems: any[], continuationIndex: number) => {
-                  const pageNumber = continuationIndex + 2;
-                  const isLastPage = pageNumber === totalSlipPages;
-
-                  return (
-                    <section
-                      key={`continuation-page-${pageNumber}`}
-                      className="fulfillment-slip-page"
-                    >
-                      <div className="relative border-b-2 border-slate-200">
-                        <div
-                          className="h-2 fulfillment-slip-print-color"
-                          style={{
-                            background: `linear-gradient(to right, ${fulfillmentSlipAccentColor}, ${fulfillmentSlipHeaderColor}, ${fulfillmentSlipAccentColor})`,
-                          }}
-                        />
-
-                        <div className="px-8 py-6">
-                          <div className="flex items-start justify-between gap-8">
-                            <div className="flex items-start gap-5">
-                              <img
-                                src={fulfillmentSlipLogoUrl}
-                                alt="Arrowhead Alarm Products"
-                                className="fulfillment-slip-brand-logo w-36 h-auto"
-                              />
-                              <div className="pt-1 text-sm leading-relaxed">
-                                <p className="font-semibold text-gray-900 print:text-black">
-                                  Arrowhead Alarm Products
-                                </p>
-                                <p className="text-gray-800 print:text-black">1A Emirali Road</p>
-                                <p className="text-gray-800 print:text-black">
-                                  Silverdale 0932, Auckland
-                                </p>
-                                <p className="text-gray-800 print:text-black">New Zealand</p>
-                              </div>
-                            </div>
-
-                            <div className="ml-auto min-w-[20rem] max-w-[24rem]">
-                              <div className="flex items-start justify-between gap-6">
-                                <div className="text-center">
-                                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-900 print:text-sky-950">
-                                    Fulfillment Document
-                                  </p>
-                                  <h1 className="mt-1 text-4xl font-black tracking-tight text-sky-950 print:text-sky-950">
-                                    Packing Slip
-                                  </h1>
-                                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 print:text-slate-700">
-                                    Continued
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 print:text-black">
-                                    {`Page ${pageNumber} of ${totalSlipPages}`}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="px-8 py-6">
-                        <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none print:border-gray-400">
-                          <div
-                            className="fulfillment-slip-print-color"
-                            style={{ backgroundColor: fulfillmentSlipHeaderColor }}
-                          >
-                            <div
-                              className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider"
-                              style={{ color: '#ffffff' }}
-                            >
-                              <span className="col-span-4">Item / SKU</span>
-                              <span className="col-span-5">Description</span>
-                              <span className="col-span-1 text-center">Ord</span>
-                              <span className="col-span-1 text-center">B/O</span>
-                              <span className="col-span-1 text-center">Shipped</span>
-                            </div>
-                          </div>
-
-                          <div className="divide-y divide-slate-200 print:divide-gray-300">
-                            {pageItems.map((item: any, idx: number) => {
-                              const itemImage =
-                                item.image || fulfillmentItemImageMap[item.sku] || null;
-
-                              return (
-                                <div
-                                  key={`${item.orderItemId}-continuation-${pageNumber}`}
-                                  className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
-                                    idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                                  } print:bg-white`}
-                                >
-                                  <div className="col-span-4 flex items-start gap-3">
-                                    <div className="fulfillment-slip-item-image h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
-                                      {itemImage ? (
-                                        <img
-                                          src={itemImage}
-                                          alt={item.name || item.sku}
-                                          className="h-full w-full object-contain"
-                                        />
-                                      ) : (
-                                        <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-400 print:text-gray-500">
-                                          No Image
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="fulfillment-slip-item-meta min-w-0">
-                                      <p className="font-mono font-bold text-slate-900 print:text-black">
-                                        {item.sku}
-                                      </p>
-                                      <p className="mt-0.5 text-xs text-slate-600 print:text-black">
-                                        Bin: {formatBinLocation(item.binLocation)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="col-span-5">
-                                    <p className="text-slate-800 font-medium print:text-black">
-                                      {getOrderItemDisplayName(item)}
-                                    </p>
-                                    {getOrderItemDescription(item) && (
-                                      <p className="mt-1 text-xs leading-relaxed text-slate-600 print:text-black">
-                                        {getOrderItemDescription(item)}
-                                      </p>
-                                    )}
-                                    {item.barcode && (
-                                      <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
-                                        {(() => {
-                                          const itemBarcode = buildCode39Barcode(item.barcode);
-                                          const itemBarcodeSize = itemBarcode
-                                            ? renderBarcodeDimensions(
-                                                itemBarcode.totalWidth,
-                                                32,
-                                                0.22,
-                                                7.5
-                                              )
-                                            : null;
-                                          const itemBarcodeImage =
-                                            fulfillmentItemBarcodeImageMap[
-                                              String(item.orderItemId)
-                                            ] || null;
-                                          if (!itemBarcode) {
-                                            return (
-                                              <p className="font-mono text-xs text-slate-600 print:text-black">
-                                                Barcode: {item.barcode}
-                                              </p>
-                                            );
-                                          }
-
-                                          return (
-                                            <>
-                                              {itemBarcodeImage && itemBarcodeSize ? (
-                                                <img
-                                                  src={itemBarcodeImage}
-                                                  alt={`Item barcode ${itemBarcode.displayValue}`}
-                                                  className="block"
-                                                  style={{
-                                                    width: itemBarcodeSize.widthMm,
-                                                    height: itemBarcodeSize.heightMm,
-                                                  }}
-                                                />
-                                              ) : (
-                                                <svg
-                                                  aria-label={`Item barcode ${itemBarcode.displayValue}`}
-                                                  className="block"
-                                                  width={itemBarcodeSize?.widthMm}
-                                                  height={itemBarcodeSize?.heightMm}
-                                                  style={{
-                                                    width: itemBarcodeSize?.widthMm,
-                                                    height: itemBarcodeSize?.heightMm,
-                                                  }}
-                                                  viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
-                                                  preserveAspectRatio="xMidYMid meet"
-                                                  role="img"
-                                                  shapeRendering="crispEdges"
-                                                >
-                                                  {(() => {
-                                                    let currentX = itemBarcode.quietZone;
-
-                                                    return itemBarcode.segments.map(
-                                                      (segment, index) => {
-                                                        const rect = segment.isBar ? (
-                                                          <rect
-                                                            key={`continued-item-barcode-${item.orderItemId}-${pageNumber}-${index}`}
-                                                            x={currentX}
-                                                            y={0}
-                                                            width={segment.width}
-                                                            height={32}
-                                                            fill="#111827"
-                                                          />
-                                                        ) : null;
-
-                                                        currentX += segment.width;
-                                                        return rect;
-                                                      }
-                                                    );
-                                                  })()}
-                                                </svg>
-                                              )}
-                                              <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
-                                                {itemBarcode.displayValue}
-                                              </p>
-                                            </>
-                                          );
-                                        })()}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
-                                    {item.quantity}
-                                  </div>
-                                  <div className="col-span-1 text-center text-slate-600 print:text-black">
-                                    {Math.max(0, item.quantity - (item.pickedQuantity || 0))}
-                                  </div>
-                                  <div className="col-span-1 text-center">
-                                    <span
-                                      className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
-                                      style={{ backgroundColor: '#d1d5db', color: '#111827' }}
-                                    >
-                                      {item.pickedQuantity}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {isLastPage && (
-                            <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                                  <ClipboardDocumentListIcon className="h-4 w-4" />
-                                  <span>Total Items:</span>
-                                  <span className="font-bold text-slate-900 print:text-black">
-                                    {allFulfillmentItems.reduce(
-                                      (sum: number, item: any) => sum + item.pickedQuantity,
-                                      0
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                                  <span>SKUs:</span>
-                                  <span className="font-bold text-slate-900 print:text-black">
-                                    {allFulfillmentItems.length}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {isLastPage && (
-                        <>
-                          <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
-                            <div className="flex items-end justify-between">
-                              <div className="text-sm">
-                                <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                                  Picked By
-                                </p>
-                                <p className="font-semibold text-slate-900 print:text-black">
-                                  {pickedByLabel}
-                                </p>
-                                <p className="text-slate-700 text-xs mt-1 print:text-black">
-                                  {new Date().toLocaleString('en-NZ', {
-                                    weekday: 'short',
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </p>
-                              </div>
-
-                              <div className="flex gap-12">
-                                <div className="text-center">
-                                  <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                                    Packed By
-                                  </p>
-                                  <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
-                            <p className="text-center text-xs text-slate-600 print:text-black">
-                              This document was generated electronically from OpsUI Warehouse
-                              Management System
-                            </p>
-                          </div>
-                        </>
-                      )}
-                    </section>
-                  );
-                })}
-              </div>
-
-              {/* Action Buttons (not printed) */}
               <div
                 id="fulfillment-slip-actions"
                 className="flex flex-wrap items-center justify-end gap-3 border-t border-white/[0.08] px-6 py-5"
@@ -2926,7 +1812,6 @@ export function PickingPage() {
       </div>
     );
   }
-
   return (
     <div className="picking-live-page min-h-screen">
       {/* Industrial grid background texture - fixed position to not affect scroll */}

@@ -866,15 +866,13 @@ export class NetSuiteOrderSyncService {
           // No fulfillment found - check if SO is still pending in NetSuite
           if (phase1Succeeded && currentReadyToShipSoIds.has(soId)) {
             if (orderStatus === 'SHIPPED') {
-              await this.updateOrderStatus(row.order_id, 'PENDING');
-              result.updated++;
-              result.details.updated.push(row.netsuite_so_tran_id || soId);
               logger.warn(
-                'Reverted SHIPPED order to PENDING (SO still pending fulfillment with no fulfillment)',
+                'Leaving SHIPPED order in place despite pending-fulfillment SO with no fulfillment match',
                 {
                   orderId: row.order_id,
                   soTranId: row.netsuite_so_tran_id,
                   soId,
+                  note: 'Avoid reintroducing already-fulfilled orders into the picking queue',
                 }
               );
             }
@@ -975,17 +973,15 @@ export class NetSuiteOrderSyncService {
               }
 
               if (orderStatus === 'SHIPPED') {
-                await this.updateOrderStatus(row.order_id, 'PENDING');
                 await this.markOrderSynced(row.order_id, syncStartTime);
-                result.updated++;
-                result.details.updated.push(row.netsuite_so_tran_id || soId);
                 logger.warn(
-                  'Reverted SHIPPED order to PENDING via sales-order fallback (pending fulfillment with no fulfillment)',
+                  'Leaving SHIPPED order in place during sales-order fallback despite pending-fulfillment SO',
                   {
                     orderId: row.order_id,
                     soTranId: row.netsuite_so_tran_id,
                     soId,
                     soStatus,
+                    note: 'Avoid resurrecting shipped orders when NetSuite temporarily shows them as pending',
                   }
                 );
                 continue;
@@ -1260,45 +1256,42 @@ export class NetSuiteOrderSyncService {
               shouldInspectLinkedFulfillmentGap &&
               isNotReadyToShip &&
               !isCancelled &&
-              !isClosed
+              !isClosed &&
+              soStatus.includes('pending fulfillment')
             ) {
-              const hasSkippedItems = await this.orderHasSkippedItems(row.order_id);
+              try {
+                await this.client.updateSalesOrderStatus(String(soId), { custbody8: true });
 
-              if (hasSkippedItems) {
-                try {
-                  await this.client.updateSalesOrderStatus(String(soId), { custbody8: true });
-
-                  stats.stale.pending++;
-                  staleOrderActions.movedToPending.push(row.netsuite_so_tran_id || soId);
-                  logger.warn(
-                    'Packing queue order lost its linked fulfillment and had skipped items - restoring ready to ship and moving to PENDING',
-                    {
-                      orderId: row.order_id,
-                      soTranId: row.netsuite_so_tran_id,
-                      previousStatus: row.status,
-                      soStatus,
-                      ifInternalId: row.netsuite_if_internal_id,
-                    }
-                  );
-                  await this.updateOrderStatus(row.order_id, 'PENDING');
-                  result.updated++;
-                  result.details.updated.push(
-                    `${row.netsuite_so_tran_id || soId} (packing-gap->PENDING:ready-to-ship-restored)`
-                  );
-                  await this.markOrderSynced(row.order_id, syncStartTime);
-                  continue;
-                } catch (error: any) {
-                  logger.warn(
-                    'Failed to restore ready to ship for skipped order after linked fulfillment disappeared',
-                    {
-                      orderId: row.order_id,
-                      soTranId: row.netsuite_so_tran_id,
-                      soId,
-                      ifInternalId: row.netsuite_if_internal_id,
-                      error: error.message,
-                    }
-                  );
-                }
+                stats.stale.pending++;
+                staleOrderActions.movedToPending.push(row.netsuite_so_tran_id || soId);
+                logger.warn(
+                  'Packing queue order lost its linked fulfillment before shipment - restoring ready to ship and moving to PENDING',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    previousStatus: row.status,
+                    soStatus,
+                    ifInternalId: row.netsuite_if_internal_id,
+                  }
+                );
+                await this.updateOrderStatus(row.order_id, 'PENDING');
+                result.updated++;
+                result.details.updated.push(
+                  `${row.netsuite_so_tran_id || soId} (packing-gap->PENDING:ready-to-ship-restored)`
+                );
+                await this.markOrderSynced(row.order_id, syncStartTime);
+                continue;
+              } catch (error: any) {
+                logger.warn(
+                  'Failed to restore ready to ship after linked fulfillment disappeared',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    soId,
+                    ifInternalId: row.netsuite_if_internal_id,
+                    error: error.message,
+                  }
+                );
               }
             }
 
@@ -1765,7 +1758,7 @@ export class NetSuiteOrderSyncService {
           tranId,
         });
       } else if (
-        ['PICKED', 'PACKED', 'SHIPPED', 'CANCELLED'].includes(existing.status) &&
+        ['PICKED', 'PACKED', 'CANCELLED'].includes(existing.status) &&
         salesOrder.readyToShip &&
         !hasFulfillment &&
         (salesOrder.status?.refName || '').toLowerCase().includes('pending fulfillment')
@@ -2180,25 +2173,13 @@ export class NetSuiteOrderSyncService {
       let cleaned = 0;
       for (const order of staleOrders) {
         try {
-          // For PENDING orders, mark as CANCELLED (order was never started)
-          // For PICKING/PICKED/PACKING orders, check NetSuite for actual status first
-          if (order.status === 'PENDING') {
-            await this.query(
-              `UPDATE orders
-               SET status = 'CANCELLED'::order_status,
-                   cancelled_at = NOW(),
-                   updated_at = NOW()
-               WHERE order_id = $1 AND status = 'PENDING'`,
-              [order.order_id]
-            );
-          } else if (order.netsuite_so_internal_id) {
-            // For active warehouse orders, check NetSuite for fulfillment status
+          if (order.netsuite_so_internal_id) {
+            // Check NetSuite status for all active orders, including PENDING ones.
             try {
               const soDetail = await this.getSalesOrderCached(order.netsuite_so_internal_id);
               const soStatus = (soDetail.status?.refName || '').toLowerCase();
 
               if (soStatus.includes('cancelled')) {
-                // SO was cancelled
                 await this.query(
                   `UPDATE orders SET status = 'CANCELLED'::order_status, cancelled_at = NOW(), updated_at = NOW()
                    WHERE order_id = $1`,
@@ -2211,7 +2192,6 @@ export class NetSuiteOrderSyncService {
                 soStatus.includes('fulfilled') ||
                 soStatus.includes('partially fulfilled')
               ) {
-                // SO was fulfilled - mark as SHIPPED (skipped warehouse)
                 await this.query(
                   `UPDATE orders SET status = 'SHIPPED'::order_status, shipped_at = NOW(), updated_at = NOW()
                    WHERE order_id = $1`,
@@ -2222,7 +2202,6 @@ export class NetSuiteOrderSyncService {
                 soStatus.includes('pending approval') ||
                 soStatus.includes('approved')
               ) {
-                // Still active in NetSuite - reset sync time and keep in queue
                 logger.info('Stale order still active in NetSuite - keeping in queue', {
                   orderId: order.order_id,
                   soTranId: order.netsuite_so_tran_id,
@@ -2234,7 +2213,6 @@ export class NetSuiteOrderSyncService {
                 );
                 continue;
               } else {
-                // Unknown status for 2+ minutes - treat as cancelled to prevent queue clogging
                 logger.warn('Cleaning up stale order with unknown NetSuite status', {
                   orderId: order.order_id,
                   soTranId: order.netsuite_so_tran_id,
@@ -2248,8 +2226,6 @@ export class NetSuiteOrderSyncService {
                 );
               }
             } catch (error: any) {
-              // Failed to check NetSuite for 2+ minutes - cancel to prevent queue clogging
-              // This is aggressive but prevents infinite stale order buildup
               logger.warn('Cancelling stale order - NetSuite check repeatedly failed', {
                 orderId: order.order_id,
                 soTranId: order.netsuite_so_tran_id,
@@ -2262,8 +2238,16 @@ export class NetSuiteOrderSyncService {
                 [order.order_id]
               );
             }
+          } else if (order.status === 'PENDING') {
+            await this.query(
+              `UPDATE orders
+               SET status = 'CANCELLED'::order_status,
+                   cancelled_at = NOW(),
+                   updated_at = NOW()
+               WHERE order_id = $1 AND status = 'PENDING'`,
+              [order.order_id]
+            );
           } else {
-            // No SO internal ID - skip
             continue;
           }
 
@@ -2552,27 +2536,6 @@ export class NetSuiteOrderSyncService {
         itemCount: ifData.items.length,
         newStatus,
       });
-    }
-  }
-
-  private async orderHasSkippedItems(orderId: string): Promise<boolean> {
-    try {
-      const result = await this.query(
-        `SELECT 1
-         FROM order_items
-         WHERE order_id = $1
-           AND (status = 'SKIPPED'::order_item_status OR skip_reason IS NOT NULL)
-         LIMIT 1`,
-        [orderId]
-      );
-
-      return result.rows.length > 0;
-    } catch (error: any) {
-      logger.warn('Failed to inspect skipped order items during NetSuite recovery', {
-        orderId,
-        error: error.message,
-      });
-      return false;
     }
   }
 

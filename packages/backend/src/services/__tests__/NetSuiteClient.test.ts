@@ -224,7 +224,17 @@ describe('NetSuiteClient', () => {
   it('updates ready to ship using a NetSuite custom body field', async () => {
     const client = new NetSuiteClient(credentials);
     const soapRequest = jest.spyOn(client as any, 'soapRequest')
-      .mockResolvedValue(`<?xml version="1.0" encoding="UTF-8"?>
+      .mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <getResponse>
+          <platformCore:status isSuccess="true" />
+          <record internalId="1604613" xsi:type="tranSales:SalesOrder">
+            <tranSales:customFieldList>
+              <platformCore:customField internalId="57" scriptId="custbody8" xsi:type="platformCore:BooleanCustomFieldRef">
+                <platformCore:value>false</platformCore:value>
+              </platformCore:customField>
+            </tranSales:customFieldList>
+          </record>
+        </getResponse>`).mockResolvedValue(`<?xml version="1.0" encoding="UTF-8"?>
         <updateResponse>
           <platformCore:status isSuccess="true" />
         </updateResponse>`);
@@ -238,7 +248,7 @@ describe('NetSuiteClient', () => {
     expect(updateEnvelope).toContain('<tranSales:memo>Backordered line skipped</tranSales:memo>');
     expect(updateEnvelope).toContain('<tranSales:customFieldList>');
     expect(updateEnvelope).toContain(
-      '<platformCore:customField xsi:type="platformCore:BooleanCustomFieldRef" scriptId="custbody8">'
+      '<platformCore:customField internalId="57" scriptId="custbody8" xsi:type="platformCore:BooleanCustomFieldRef">'
     );
     expect(updateEnvelope).toContain('<platformCore:value>false</platformCore:value>');
   });

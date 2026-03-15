@@ -344,7 +344,55 @@ describe('NetSuiteOrderSyncService', () => {
     );
   });
 
-  it('reverts shipped orders to pending when the sales order is still pending fulfillment without a fulfillment', async () => {
+  it('keeps stale pending orders when NetSuite still shows them as pending fulfillment', async () => {
+    const client = new NetSuiteClient(credentials);
+    const service = new NetSuiteOrderSyncService(client);
+    const queryMock = jest
+      .spyOn(service as any, 'query')
+      .mockImplementation(async (sql: string) => {
+        if (sql.includes("status IN ('PENDING', 'PICKING', 'PICKED', 'PACKING')")) {
+          return {
+            rows: [
+              {
+                order_id: 'SO68561',
+                status: 'PENDING',
+                netsuite_so_internal_id: '1605076',
+                netsuite_so_tran_id: 'SO68561',
+                netsuite_last_synced_at: '2026-03-14T23:31:53.560Z',
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+
+        return { rows: [], rowCount: 0 };
+      });
+
+    jest.spyOn(service as any, 'getSalesOrderCached').mockResolvedValue(
+      baseSalesOrder({
+        id: '1605076',
+        tranId: 'SO68561',
+        readyToShip: true,
+        status: { id: '_pendingFulfillment', refName: 'Pending Fulfillment' },
+      })
+    );
+
+    const cleaned = await (service as any).cleanupStaleOrders(new Date('2026-03-14T23:34:42.000Z'));
+
+    expect(cleaned).toBe(0);
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'UPDATE orders SET netsuite_last_synced_at = NOW(), updated_at = NOW()'
+      ),
+      ['SO68561']
+    );
+    expect(queryMock).not.toHaveBeenCalledWith(
+      expect.stringContaining("SET status = 'CANCELLED'::order_status"),
+      ['SO68561']
+    );
+  });
+
+  it('does not reopen shipped orders when the sales order is still pending fulfillment without a fulfillment', async () => {
     const { service } = createService();
 
     jest.spyOn(service as any, 'findOrderByNetSuiteSoId').mockResolvedValue({
@@ -366,16 +414,16 @@ describe('NetSuiteOrderSyncService', () => {
     expect(result).toEqual(
       expect.objectContaining({
         created: false,
-        updated: true,
-        skipped: false,
+        updated: false,
+        skipped: true,
         tranId: 'SO68381',
       })
     );
-    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO68381', 'PENDING');
+    expect((service as any).updateOrderStatus).not.toHaveBeenCalledWith('SO68381', 'PENDING');
     expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68381', expect.any(Date));
   });
 
-  it('reverts shipped orders to pending during sync when NetSuite returns the sales order to ready-to-ship without a fulfillment', async () => {
+  it('keeps shipped orders out of the picking queue during sync when NetSuite returns the sales order to ready-to-ship without a fulfillment', async () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
@@ -419,8 +467,8 @@ describe('NetSuiteOrderSyncService', () => {
 
     const result = await service.syncOrders('INT-AAP-NS01', { mode: 'full' });
 
-    expect(result.updated).toBe(1);
-    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO68563', 'PENDING');
+    expect(result.updated).toBe(0);
+    expect((service as any).updateOrderStatus).not.toHaveBeenCalledWith('SO68563', 'PENDING');
     expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68563', expect.any(Date));
   });
 
@@ -1170,10 +1218,10 @@ describe('NetSuiteOrderSyncService', () => {
     expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70008', 'PACKED');
   });
 
-  it('restores ready to ship and moves skipped orders back to pending when the linked fulfillment was deleted', async () => {
+  it('restores ready to ship and moves orders back to pending when the linked fulfillment was deleted', async () => {
     const { client, service } = createService();
 
-    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string, params?: any[]) => {
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
       if (sql.includes("status IN ('PICKED', 'PACKING', 'PACKED')")) {
         return {
           rows: [
@@ -1187,17 +1235,6 @@ describe('NetSuiteOrderSyncService', () => {
               hours_since_created: '1',
             },
           ],
-          rowCount: 1,
-        };
-      }
-
-      if (
-        sql.includes('FROM order_items') &&
-        params?.[0] === 'SO70008B' &&
-        sql.includes("status = 'SKIPPED'::order_item_status")
-      ) {
-        return {
-          rows: [{ '?column?': 1 }],
           rowCount: 1,
         };
       }

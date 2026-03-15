@@ -41,6 +41,8 @@ import {
   PrinterIcon,
   ForwardIcon,
   PencilSquareIcon,
+  WrenchScrewdriverIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Address, Carrier, ExceptionType, NZCQuote, OrderStatus } from '@opsui/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -273,6 +275,12 @@ export function PackingPage() {
   const [skipReason, setSkipReason] = useState('');
   const [skipQuantity, setSkipQuantity] = useState(1);
   const [isSkipping, setIsSkipping] = useState(false);
+
+  // Exception modal state
+  const [showExceptionModal, setShowExceptionModal] = useState(false);
+  const [exceptionType, setExceptionType] = useState<ExceptionType>(ExceptionType.DAMAGE);
+  const [exceptionReason, setExceptionReason] = useState('');
+  const [exceptionQuantity, setExceptionQuantity] = useState(0);
 
   // Manual override modal state
   const [showOverrideModal, setShowOverrideModal] = useState(false);
@@ -1531,6 +1539,15 @@ export function PackingPage() {
   // SKIP ITEM FUNCTIONALITY
   // ==========================================================================
 
+  const handleReportException = () => {
+    if (!currentItem) return;
+
+    setExceptionType(ExceptionType.DAMAGE);
+    setExceptionReason('');
+    setExceptionQuantity(currentItem.verifiedQuantity || 0);
+    setShowExceptionModal(true);
+  };
+
   const handleSkipItem = (index: number) => {
     const item = order?.items?.[index];
     if (!item) return;
@@ -1557,6 +1574,7 @@ export function PackingPage() {
         quantityExpected: item.quantity,
         quantityActual: item.quantity - skipQuantity,
         reason: skipReason || 'No reason provided',
+        reportedBy: currentUser?.userId || '',
       });
 
       await apiClient.post(`/orders/${orderId}/skip-packing-item`, {
@@ -1578,6 +1596,36 @@ export function PackingPage() {
       showToast(error instanceof Error ? error.message : 'Failed to skip item', 'error');
     } finally {
       setIsSkipping(false);
+    }
+  };
+
+  const handleLogException = async () => {
+    if (!currentItem || !currentUser) return;
+
+    const quantityActual =
+      exceptionType === ExceptionType.SHORT_PICK
+        ? Math.max(0, Math.min(currentItem.quantity, exceptionQuantity || 0))
+        : currentItem.verifiedQuantity || 0;
+
+    try {
+      await logExceptionMutation.mutateAsync({
+        orderId: orderId!,
+        orderItemId: currentItem.orderItemId,
+        sku: currentItem.sku,
+        type: exceptionType,
+        quantityExpected: currentItem.quantity,
+        quantityActual,
+        reason: exceptionReason || `Exception reported: ${exceptionType}`,
+        reportedBy: currentUser.userId,
+      });
+
+      showToast('Exception logged successfully!', 'success');
+      setShowExceptionModal(false);
+      setExceptionReason('');
+      setExceptionQuantity(currentItem.verifiedQuantity || 0);
+      await refetch();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to log exception', 'error');
     }
   };
 
@@ -3136,6 +3184,21 @@ export function PackingPage() {
                     </div>
                   )}
 
+                  {!isViewMode && currentItem && (
+                    <div className="flex gap-3">
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        onClick={handleReportException}
+                        disabled={logExceptionMutation.isPending}
+                        className="w-full action-button-enhanced touch-target"
+                      >
+                        <WrenchScrewdriverIcon className="h-5 w-5 mr-2" />
+                        Report Exception
+                      </Button>
+                    </div>
+                  )}
+
                   {isViewMode && (
                     <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
                       <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
@@ -3356,6 +3419,137 @@ export function PackingPage() {
           cancelText="Keep Locked"
           variant="warning"
         />
+
+        {/* Exception Modal */}
+        {showExceptionModal && currentItem && (
+          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-[120] p-3 sm:p-6 lg:p-8">
+            <div className="scanner-modal-content relative z-[121] w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl">
+              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                      <WrenchScrewdriverIcon className="h-5 w-5" />
+                    </div>
+                    <h2 className="picking-title text-lg">Report Exception</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowExceptionModal(false)}
+                    className="text-white hover:text-warning-200 transition-colors"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4 lg:grid lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] lg:gap-6 lg:space-y-0">
+                <div className={packingSurfacePanelSpacedClass}>
+                  <div>
+                    <p className="picking-title text-gray-900 dark:text-white">
+                      {currentItemDisplayName}
+                    </p>
+                    {currentItemDescription && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {currentItemDescription}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
+                      {currentItem.sku}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3">
+                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Required
+                      </p>
+                      <p className="mt-1 picking-title text-gray-900 dark:text-white">
+                        {currentItem.quantity}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3">
+                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Verified
+                      </p>
+                      <p className="mt-1 picking-title text-gray-900 dark:text-white">
+                        {currentItem.verifiedQuantity || 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-warning-500/30 bg-warning-500/10 p-4">
+                    <p className="text-sm text-warning-800 dark:text-warning-200">
+                      Use this to log issues during packing. For actual backorders, keep using `Skip
+                      this item`.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Exception Type <span className="text-error-400">*</span>
+                    </label>
+                    <select
+                      value={exceptionType}
+                      onChange={e => setExceptionType(e.target.value as ExceptionType)}
+                      className={packingSelectClass}
+                    >
+                      <option value={ExceptionType.DAMAGE}>Damaged</option>
+                      <option value={ExceptionType.DEFECTIVE}>Defective</option>
+                      <option value={ExceptionType.WRONG_ITEM}>Wrong Item</option>
+                      <option value={ExceptionType.BARCODE_MISMATCH}>Barcode Mismatch</option>
+                      <option value={ExceptionType.SHORT_PICK}>Short Pack</option>
+                      <option value={ExceptionType.OTHER}>Other</option>
+                    </select>
+                  </div>
+
+                  {exceptionType === ExceptionType.SHORT_PICK && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Actual Verified Quantity
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={currentItem.quantity}
+                        value={exceptionQuantity}
+                        onChange={e => setExceptionQuantity(parseInt(e.target.value, 10) || 0)}
+                        className={`${packingInputClass} font-mono`}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Reason <span className="text-error-400">*</span>
+                    </label>
+                    <textarea
+                      value={exceptionReason}
+                      onChange={e => setExceptionReason(e.target.value)}
+                      rows={5}
+                      className={packingInputClass}
+                      placeholder="Describe what went wrong and anything the next person should know."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setShowExceptionModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleLogException}
+                  isLoading={logExceptionMutation.isPending}
+                  disabled={!exceptionReason.trim()}
+                >
+                  Log Exception
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Manual Override Modal */}
         {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (

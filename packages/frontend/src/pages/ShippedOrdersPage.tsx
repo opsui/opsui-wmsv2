@@ -33,10 +33,21 @@ import {
   TagIcon,
 } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
+import {
+  FulfillmentPackingSlip,
+  FULFILLMENT_SLIP_PRINT_STYLES,
+  printFulfillmentSlipElement,
+} from '@/components/orders/FulfillmentPackingSlip';
 import { Header, Breadcrumb, useToast } from '@/components/shared';
 import { cn } from '@/lib/utils';
-import { nzcApi, orderApi, useShippedOrders, useNZCTracking } from '@/services/api';
-import type { NZCLabelResponse, Order } from '@opsui/shared';
+import {
+  nzcApi,
+  orderApi,
+  useShippedOrders,
+  useNZCTracking,
+  useExportShippedOrders,
+} from '@/services/api';
+import type { NZCLabelResponse } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
@@ -67,6 +78,8 @@ interface DocumentBlockProps {
   icon: typeof DocumentTextIcon;
   isOpen: boolean;
   onToggle: () => void;
+  preview?: ReactNode;
+  badge?: string;
   children: ReactNode;
 }
 
@@ -113,27 +126,6 @@ function parseDestination(raw: string | null | undefined): ShippedOrder['destina
   } catch {
     return { address: raw };
   }
-}
-
-function escapeHtml(value: string | number | null | undefined) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function formatDateTime(value: string | Date | null | undefined) {
-  if (!value) return 'N/A';
-
-  return new Date(value).toLocaleString('en-NZ', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 function parseConnotes(trackingNumber: string | null | undefined) {
@@ -196,247 +188,74 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function buildPackingSlipHtml(order: Order) {
-  const shippingAddress = order.shippingAddress;
-  const addressLines = [
-    shippingAddress?.name,
-    shippingAddress?.company,
-    shippingAddress?.addressLine1,
-    shippingAddress?.addressLine2,
-    [shippingAddress?.city, shippingAddress?.state, shippingAddress?.postalCode]
-      .filter(Boolean)
-      .join(', '),
-    shippingAddress?.country,
-    shippingAddress?.phone ? `Phone: ${shippingAddress.phone}` : null,
-  ].filter(Boolean);
-
-  const itemRows = (order.items || [])
-    .map(
-      item => `
-        <tr>
-          <td>${escapeHtml(item.sku)}</td>
-          <td>${escapeHtml(item.name || 'Item')}</td>
-          <td>${escapeHtml(item.quantity)}</td>
-          <td>${escapeHtml(item.pickedQuantity || item.quantity)}</td>
-          <td>${escapeHtml(item.status || 'N/A')}</td>
-        </tr>
-      `
-    )
-    .join('');
-
-  return `
-    <!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Packing Slip ${escapeHtml(order.orderId)}</title>
-        <style>
-          body {
-            margin: 0;
-            padding: 32px;
-            font-family: "Segoe UI", Arial, sans-serif;
-            color: #0f172a;
-            background: #f8fafc;
-          }
-          .sheet {
-            max-width: 960px;
-            margin: 0 auto;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
-          }
-          .header {
-            padding: 28px 32px;
-            background: linear-gradient(135deg, #1e3a5f, #335c81);
-            color: #ffffff;
-          }
-          .header h1 {
-            margin: 0 0 6px;
-            font-size: 30px;
-          }
-          .header p {
-            margin: 0;
-            opacity: 0.88;
-          }
-          .meta {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 14px;
-            padding: 24px 32px;
-            background: #eff6ff;
-            border-bottom: 1px solid #dbeafe;
-          }
-          .meta-card {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 14px;
-            padding: 12px 14px;
-          }
-          .meta-label {
-            display: block;
-            margin-bottom: 4px;
-            color: #475569;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-          }
-          .meta-value {
-            font-size: 15px;
-            font-weight: 600;
-          }
-          .content {
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 24px;
-            padding: 24px 32px 8px;
-          }
-          .panel {
-            border: 1px solid #cbd5e1;
-            border-radius: 16px;
-            padding: 18px;
-            background: #ffffff;
-          }
-          .panel h2 {
-            margin: 0 0 12px;
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #1e3a5f;
-          }
-          .panel p {
-            margin: 0 0 4px;
-            line-height: 1.5;
-          }
-          table {
-            width: calc(100% - 64px);
-            margin: 0 32px 32px;
-            border-collapse: collapse;
-          }
-          thead {
-            background: #e2e8f0;
-          }
-          th, td {
-            padding: 12px 14px;
-            border: 1px solid #cbd5e1;
-            text-align: left;
-            font-size: 13px;
-          }
-          th {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #334155;
-          }
-          @media print {
-            body {
-              background: #ffffff;
-              padding: 0;
-            }
-            .sheet {
-              border: 0;
-              border-radius: 0;
-              box-shadow: none;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="sheet">
-          <div class="header">
-            <h1>Packing Slip</h1>
-            <p>Arrowhead Alarm Products fulfillment document</p>
-          </div>
-          <div class="meta">
-            <div class="meta-card">
-              <span class="meta-label">Sales Order</span>
-              <span class="meta-value">${escapeHtml(order.netsuiteSoTranId || order.orderId)}</span>
-            </div>
-            <div class="meta-card">
-              <span class="meta-label">Fulfillment</span>
-              <span class="meta-value">${escapeHtml(order.netsuiteIfTranId || order.orderId)}</span>
-            </div>
-            <div class="meta-card">
-              <span class="meta-label">Shipped At</span>
-              <span class="meta-value">${escapeHtml(formatDateTime(order.shippedAt))}</span>
-            </div>
-            <div class="meta-card">
-              <span class="meta-label">Tracking</span>
-              <span class="meta-value">${escapeHtml(order.trackingNumber || 'N/A')}</span>
-            </div>
-          </div>
-          <div class="content">
-            <div class="panel">
-              <h2>Customer</h2>
-              <p><strong>${escapeHtml(order.customerName)}</strong></p>
-              <p>Customer PO: ${escapeHtml(order.customerPoNumber || 'N/A')}</p>
-              <p>Carrier: ${escapeHtml(order.carrier || 'N/A')}</p>
-            </div>
-            <div class="panel">
-              <h2>Ship To</h2>
-              ${addressLines.map(line => `<p>${escapeHtml(line)}</p>`).join('')}
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Description</th>
-                <th>Ordered</th>
-                <th>Packed</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemRows || '<tr><td colspan="5">No line items available</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      </body>
-    </html>
-  `;
-}
-
 function DocumentBlock({
   title,
   description,
   icon: Icon,
   isOpen,
   onToggle,
+  preview,
+  badge,
   children,
 }: DocumentBlockProps) {
   return (
-    <div
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm"
-      onClick={event => event.stopPropagation()}
-    >
+    <div className="space-y-3" onClick={event => event.stopPropagation()}>
       <button
         type="button"
         onClick={event => {
           event.stopPropagation();
           onToggle();
         }}
-        className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-slate-50"
+        className="group block w-full text-left"
       >
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 rounded-xl bg-sky-50 p-2 text-sky-700">
-            <Icon className="h-5 w-5" />
+        <div className="relative overflow-hidden rounded-[28px] bg-slate-100 shadow-[0_22px_45px_rgba(15,23,42,0.14)] ring-1 ring-slate-200/80 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-[0_28px_55px_rgba(15,23,42,0.18)] dark:bg-slate-900 dark:ring-white/10 dark:shadow-[0_22px_45px_rgba(2,6,23,0.55)] dark:group-hover:shadow-[0_28px_55px_rgba(2,6,23,0.7)]">
+          {preview ?? (
+            <div className="flex h-48 items-center justify-center text-sm text-slate-500 dark:text-slate-300">
+              Preview unavailable
+            </div>
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/18 via-transparent to-white/10 dark:from-slate-950/45 dark:via-slate-950/10 dark:to-white/5" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between px-4 py-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-white/92 p-2 text-sky-700 shadow-sm backdrop-blur dark:bg-slate-950/88 dark:text-sky-300 dark:ring-1 dark:ring-white/10">
+                <Icon className="h-5 w-5" />
+              </div>
+              <div className="rounded-2xl bg-white/92 px-3 py-2 shadow-sm backdrop-blur dark:bg-slate-950/88 dark:ring-1 dark:ring-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                    {title}
+                  </div>
+                  {badge ? (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                      {badge}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-300">
+                  {description}
+                </div>
+              </div>
+            </div>
+            <div className="rounded-full bg-white/92 p-2 text-slate-500 shadow-sm backdrop-blur dark:bg-slate-950/88 dark:text-slate-200 dark:ring-1 dark:ring-white/10">
+              {isOpen ? (
+                <ChevronDownIcon className="h-5 w-5" />
+              ) : (
+                <ChevronRightIcon className="h-5 w-5" />
+              )}
+            </div>
           </div>
-          <div>
-            <div className="font-semibold text-slate-900">{title}</div>
-            <div className="text-sm text-slate-500">{description}</div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between px-4 pb-4">
+            <span className="rounded-full bg-white/92 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:bg-slate-950/88 dark:text-slate-100 dark:ring-1 dark:ring-white/10">
+              Click to {isOpen ? 'collapse' : 'expand'}
+            </span>
           </div>
         </div>
-        {isOpen ? (
-          <ChevronDownIcon className="h-5 w-5 text-slate-500" />
-        ) : (
-          <ChevronRightIcon className="h-5 w-5 text-slate-500" />
-        )}
       </button>
-      {isOpen && <div className="border-t border-slate-200 px-4 py-4">{children}</div>}
+      {isOpen && (
+        <div className="rounded-3xl bg-white/88 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80 backdrop-blur dark:bg-slate-950/82 dark:ring-white/10 dark:shadow-[0_12px_32px_rgba(2,6,23,0.45)]">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -505,6 +324,7 @@ export function ShippedOrdersPage() {
 
   const { data: shippedData, isLoading: loading } = useShippedOrders({ limit: 100 });
   const apiResponse = shippedData?.data;
+  const exportMutation = useExportShippedOrders();
 
   const orders: ShippedOrder[] = useMemo(() => {
     if (!apiResponse?.orders) return [];
@@ -566,9 +386,14 @@ export function ShippedOrdersPage() {
       );
       return labels;
     },
-    enabled: isNzcLabelOpen && selectedConnotes.length > 0,
+    enabled: selectedConnotes.length > 0,
     staleTime: 300000,
   });
+  const packingSlipElementId = selectedOrderDetail
+    ? `shipped-packing-slip-${selectedOrderDetail.orderId}`
+    : 'shipped-packing-slip-preview';
+  const primaryLabel = selectedLabels?.[0]?.label;
+  const primaryLabelSource = primaryLabel ? getLabelSource(primaryLabel) : null;
 
   const getStatusConfig = (status: ShippedOrder['status']) => {
     const configs = {
@@ -615,45 +440,32 @@ export function ShippedOrdersPage() {
     });
   };
 
-  const handleExport = () => {
-    // Export logic would go here
-    alert('Export functionality would generate a CSV/PDF of shipped orders');
+  const handleExport = async () => {
+    const ids = filteredOrders.map(o => o.id);
+    if (ids.length === 0) return;
+    const data = await exportMutation.mutateAsync(ids);
+    const blob = data instanceof Blob ? data : new Blob([data as string], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shipped-orders-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
 
-  const handlePrintPackingSlip = () => {
+  const handlePrintPackingSlip = async () => {
     if (!selectedOrderDetail) {
       showToast('Packing slip is still loading', 'warning');
       return;
     }
-    const previewStorageKey = `picking-fulfillment-preview:${selectedOrderDetail.orderId}`;
-    const previewPayload = JSON.stringify(selectedOrderDetail);
 
-    sessionStorage.setItem(previewStorageKey, previewPayload);
-    localStorage.setItem(previewStorageKey, previewPayload);
-
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    iframe.style.opacity = '0';
-    iframe.style.pointerEvents = 'none';
-    iframe.setAttribute('aria-hidden', 'true');
-    iframe.src = `/orders/${encodeURIComponent(selectedOrderDetail.orderId)}/pick?printFulfillmentSlip=1`;
-    document.body.appendChild(iframe);
-
-    window.setTimeout(() => {
-      sessionStorage.removeItem(previewStorageKey);
-      localStorage.removeItem(previewStorageKey);
-    }, 15000);
-
-    window.setTimeout(() => {
-      if (iframe.parentNode) {
-        iframe.parentNode.removeChild(iframe);
-      }
-    }, 20000);
+    try {
+      await printFulfillmentSlipElement(packingSlipElementId);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to print packing slip', 'error');
+    }
   };
 
   const handleDownloadPackingSlip = () => {
@@ -662,8 +474,19 @@ export function ShippedOrdersPage() {
       return;
     }
 
+    const slipElement = document.getElementById(packingSlipElementId);
+    if (!slipElement) {
+      showToast('Packing slip preview is not ready yet', 'warning');
+      return;
+    }
+
     downloadBlob(
-      new Blob([buildPackingSlipHtml(selectedOrderDetail)], { type: 'text/html' }),
+      new Blob(
+        [
+          `<!doctype html><html><head><meta charset="utf-8" /><title>Packing Slip ${selectedOrderDetail.orderId}</title><style>${FULFILLMENT_SLIP_PRINT_STYLES}</style></head><body class="fulfillment-slip-print-preview">${slipElement.outerHTML}</body></html>`,
+        ],
+        { type: 'text/html' }
+      ),
       `packing-slip-${selectedOrderDetail.orderId}.html`
     );
   };
@@ -803,9 +626,13 @@ export function ShippedOrdersPage() {
               <option value="exception">Exception</option>
             </select>
 
-            <button onClick={handleExport} className="shipping-export-btn">
+            <button
+              onClick={handleExport}
+              disabled={exportMutation.isPending || filteredOrders.length === 0}
+              className="shipping-export-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <DocumentArrowDownIcon className="h-4 w-4" />
-              Export
+              {exportMutation.isPending ? 'Exporting…' : 'Export'}
             </button>
           </div>
         </div>
@@ -974,10 +801,42 @@ export function ShippedOrdersPage() {
                       <div className="mt-4 space-y-3">
                         <DocumentBlock
                           title="Packing Slip"
-                          description="Expand to reprint or download the shipped packing slip."
+                          description="Small live preview of the original packing slip."
                           icon={DocumentTextIcon}
                           isOpen={isPackingSlipOpen}
                           onToggle={() => setIsPackingSlipOpen(current => !current)}
+                          preview={
+                            isLoadingOrderDetail ? (
+                              <div className="flex h-56 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
+                                Loading packing slip preview...
+                              </div>
+                            ) : selectedOrderDetail ? (
+                              <div className="h-56 overflow-hidden bg-slate-100">
+                                <div
+                                  className="origin-top-left"
+                                  style={{
+                                    width: '625%',
+                                    transform: 'scale(0.16)',
+                                    transformOrigin: 'top left',
+                                  }}
+                                >
+                                  <FulfillmentPackingSlip
+                                    order={selectedOrderDetail}
+                                    pickedByLabel={
+                                      (selectedOrderDetail as any).pickerName ||
+                                      (selectedOrderDetail as any).pickerId ||
+                                      'Unknown'
+                                    }
+                                    containerId={`${packingSlipElementId}-preview`}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex h-56 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
+                                Packing slip preview unavailable
+                              </div>
+                            )
+                          }
                         >
                           <div className="flex flex-wrap items-center gap-3">
                             <button
@@ -1003,24 +862,39 @@ export function ShippedOrdersPage() {
                             {isLoadingOrderDetail ? (
                               <p>Loading packing slip details...</p>
                             ) : selectedOrderDetail ? (
-                              <div className="grid gap-2 sm:grid-cols-2">
-                                <p>
-                                  <span className="font-medium text-slate-900">Sales Order:</span>{' '}
-                                  {selectedOrderDetail.netsuiteSoTranId ||
-                                    selectedOrderDetail.orderId}
-                                </p>
-                                <p>
-                                  <span className="font-medium text-slate-900">Fulfillment:</span>{' '}
-                                  {selectedOrderDetail.netsuiteIfTranId || 'Pending'}
-                                </p>
-                                <p>
-                                  <span className="font-medium text-slate-900">Carrier:</span>{' '}
-                                  {selectedOrderDetail.carrier || 'N/A'}
-                                </p>
-                                <p>
-                                  <span className="font-medium text-slate-900">Items:</span>{' '}
-                                  {selectedOrderDetail.items?.length || 0}
-                                </p>
+                              <div className="space-y-4">
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                  <p>
+                                    <span className="font-medium text-slate-900">Sales Order:</span>{' '}
+                                    {selectedOrderDetail.netsuiteSoTranId ||
+                                      selectedOrderDetail.orderId}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium text-slate-900">Fulfillment:</span>{' '}
+                                    {selectedOrderDetail.netsuiteIfTranId || 'Pending'}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium text-slate-900">Carrier:</span>{' '}
+                                    {selectedOrderDetail.carrier || 'N/A'}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium text-slate-900">Items:</span>{' '}
+                                    {selectedOrderDetail.items?.length || 0}
+                                  </p>
+                                </div>
+                                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                  <div className="max-h-[42rem] overflow-auto">
+                                    <FulfillmentPackingSlip
+                                      order={selectedOrderDetail}
+                                      pickedByLabel={
+                                        (selectedOrderDetail as any).pickerName ||
+                                        (selectedOrderDetail as any).pickerId ||
+                                        'Unknown'
+                                      }
+                                      containerId={packingSlipElementId}
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             ) : (
                               <p>Packing slip data is not available for this order yet.</p>
@@ -1030,10 +904,53 @@ export function ShippedOrdersPage() {
 
                         <DocumentBlock
                           title="NZC Ticket Label"
-                          description="Expand to reprint, print, or download each NZC label."
+                          description="Small live preview of the NZC shipping label."
                           icon={TagIcon}
                           isOpen={isNzcLabelOpen}
                           onToggle={() => setIsNzcLabelOpen(current => !current)}
+                          badge={
+                            selectedConnotes.length > 1
+                              ? `${selectedConnotes.length} labels`
+                              : undefined
+                          }
+                          preview={
+                            selectedConnotes.length === 0 ? (
+                              <div className="flex h-56 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
+                                No NZC label attached
+                              </div>
+                            ) : isLoadingLabels ? (
+                              <div className="flex h-56 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
+                                Loading label preview...
+                              </div>
+                            ) : primaryLabelSource ? (
+                              <div className="relative flex h-56 items-center justify-center bg-[radial-gradient(circle_at_top,#f8fafc,#e2e8f0)] p-4">
+                                <div className="max-h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+                                  {primaryLabelSource.isPdf ? (
+                                    <iframe
+                                      src={primaryLabelSource.src}
+                                      title="NZC Label Preview"
+                                      className="h-48 w-72 pointer-events-none"
+                                    />
+                                  ) : (
+                                    <img
+                                      src={primaryLabelSource.src}
+                                      alt="NZC Label Preview"
+                                      className="h-48 w-auto object-contain"
+                                    />
+                                  )}
+                                </div>
+                                {selectedConnotes.length > 1 ? (
+                                  <div className="absolute right-4 top-4 rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white shadow">
+                                    +{selectedConnotes.length - 1} more
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <div className="flex h-56 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
+                                Label preview unavailable
+                              </div>
+                            )
+                          }
                         >
                           {selectedConnotes.length === 0 ? (
                             <p className="text-sm text-slate-500">
