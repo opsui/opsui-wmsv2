@@ -1723,7 +1723,31 @@ export function PackingPage() {
   };
 
   const confirmCreateShipment = async () => {
-    await handleCreateShipment(true);
+    if (!orderId) {
+      return;
+    }
+
+    try {
+      const latestOrderResponse = await refetch();
+      const latestOrder = latestOrderResponse.data ?? order;
+
+      if (
+        latestOrder?.status === OrderStatus.PICKED ||
+        latestOrder?.status === OrderStatus.PACKING
+      ) {
+        await completePackingMutation.mutateAsync({
+          orderId,
+          dto: {
+            orderId,
+            packerId: latestOrder?.packerId || currentUser.userId,
+          },
+        });
+      }
+
+      await handleCreateShipment(true);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to complete packing', 'error');
+    }
   };
 
   const handleCreateShipment = async (skipConfirmCheck = false) => {
