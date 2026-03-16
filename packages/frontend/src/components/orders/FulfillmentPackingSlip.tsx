@@ -261,22 +261,31 @@ const formatFulfillmentActorTimestamp = (value?: string | Date | null) => {
 const formatAddressLines = (address?: Address | null): AddressLine[] => {
   if (!address) return [];
   const a = address as any;
-  const lines: { label: string; value: string | undefined | null }[] = [
-    { label: 'Name', value: a.name },
-    { label: 'Company', value: a.company },
-    { label: 'Address', value: a.addressLine1 || a.street1 },
-    { label: '', value: a.addressLine2 || a.street2 },
-    { label: 'City', value: a.city },
-    { label: 'State', value: a.state },
-    { label: 'Postal Code', value: a.postalCode },
-    { label: 'Country', value: formatNetSuiteDisplayText(a.country) },
-  ];
-  return lines
-    .map(line => ({
-      label: line.label,
-      value: typeof line.value === 'string' ? line.value.trim() : '',
-    }))
-    .filter(line => line.value);
+  const normalizeValue = (value?: string | null) => (typeof value === 'string' ? value.trim() : '');
+  const name = normalizeValue(a.name);
+  const company = normalizeValue(a.company);
+  const addressLine1 = normalizeValue(a.addressLine1 || a.street1);
+  const suburb = normalizeValue(a.addressLine2 || a.street2);
+  const phone = normalizeValue(a.phone);
+  const locationLine = [
+    normalizeValue(a.city),
+    normalizeValue(a.state),
+    normalizeValue(a.postalCode),
+    normalizeValue(formatNetSuiteDisplayText(a.country)),
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const values = [
+    name,
+    company && company.toLowerCase() !== name.toLowerCase() ? company : '',
+    addressLine1,
+    suburb,
+    locationLine,
+    phone,
+  ].filter(Boolean);
+
+  return values.map(value => ({ label: '', value }));
 };
 
 function BarcodeGraphic({
@@ -368,7 +377,7 @@ function FulfillmentSlipItemRow({
       className={`grid grid-cols-12 gap-2 px-2 py-1 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} print:bg-white`}
     >
       <div className="col-span-4 flex items-start gap-2">
-        <div className="fulfillment-slip-item-image h-7 w-7 shrink-0 overflow-hidden rounded border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+        <div className="fulfillment-slip-item-image h-20 w-20 shrink-0 overflow-hidden rounded border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
           {itemImage ? (
             <img
               src={itemImage}
@@ -383,21 +392,9 @@ function FulfillmentSlipItemRow({
         </div>
         <div className="fulfillment-slip-item-meta min-w-0">
           <p className="font-mono font-bold text-slate-900 print:text-black">{item.sku}</p>
-          <p className="mt-0.5 text-xs text-slate-600 print:text-black">
-            Bin: {formatBinLocation(item.binLocation)}
-          </p>
-        </div>
-      </div>
-      <div className="col-span-5">
-        {getOrderItemDescription(item) && (
-          <p className="text-xs leading-snug text-slate-700 print:text-black">
-            {getOrderItemDescription(item)}
-          </p>
-        )}
-        {item.barcode && (
-          <div className="mt-1 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
-            {itemBarcode ? (
-              <>
+          {item.barcode && (
+            <div className="mt-1 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
+              {itemBarcode ? (
                 <BarcodeGraphic
                   barcode={itemBarcode}
                   size={itemBarcodeSize}
@@ -405,16 +402,20 @@ function FulfillmentSlipItemRow({
                   height={20}
                   rectKeyPrefix={barcodeKeyPrefix}
                 />
-                <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
-                  {itemBarcode.displayValue}
+              ) : (
+                <p className="font-mono text-xs text-slate-600 print:text-black">
+                  Barcode: {item.barcode}
                 </p>
-              </>
-            ) : (
-              <p className="font-mono text-xs text-slate-600 print:text-black">
-                Barcode: {item.barcode}
-              </p>
-            )}
-          </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="col-span-5">
+        {getOrderItemDescription(item) && (
+          <p className="text-xs leading-snug text-slate-700 print:text-black">
+            {getOrderItemDescription(item)}
+          </p>
         )}
       </div>
       <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
@@ -518,7 +519,7 @@ export function FulfillmentPackingSlip({
     ? new Date(extendedOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
     : new Date().toLocaleDateString('en-NZ');
   const shippingMethodLabel = formatNetSuiteDisplayText(
-    extendedOrder.shippingMethod || order.carrier || 'Not specified'
+    extendedOrder.shippingMethod || 'Not specified'
   );
   const accountNumberDetails = extractNetSuiteAccountNumber(order.customerName, order.customerId);
   const salesOrderBarcode = buildCode39Barcode(order.netsuiteSoTranId || order.orderId);
@@ -548,45 +549,74 @@ export function FulfillmentPackingSlip({
             <div className="opsui-accent-bar h-2" />
             <div className="px-6 py-3">
               <div className="flex items-start justify-between gap-8">
-                <div className="flex items-start gap-5">
-                  <img
-                    src={fulfillmentSlipLogoUrl}
-                    alt="Arrowhead Alarm Products"
-                    className="fulfillment-slip-brand-logo w-24 h-auto"
-                  />
-                  <div className="pt-1 text-sm leading-relaxed">
-                    <p className="font-bold text-gray-900 print:text-black">
-                      Arrowhead Alarm Products
-                    </p>
-                    <p className="text-gray-600 print:text-black">1A Emirali Road</p>
-                    <p className="text-gray-600 print:text-black">Silverdale 0932, Auckland</p>
-                    <p className="text-gray-600 print:text-black">New Zealand</p>
-                  </div>
-                  {salesOrderBarcode && (
-                    <div className="flex flex-col items-center justify-center pt-1">
-                      <BarcodeGraphic
-                        barcode={salesOrderBarcode}
-                        size={salesOrderBarcodeSize}
-                        image={salesOrderBarcodeImage}
-                        height={24}
-                        rectKeyPrefix="sales-order-barcode"
-                      />
-                      <p className="mt-0.5 font-mono text-[10px] font-semibold tracking-tight text-slate-900 print:text-black">
-                        {salesOrderBarcode.displayValue}
+                <div className="flex flex-1 items-start gap-8">
+                  <div className="flex items-start gap-5 shrink-0">
+                    <img
+                      src={fulfillmentSlipLogoUrl}
+                      alt="Arrowhead Alarm Products"
+                      className="fulfillment-slip-brand-logo w-24 h-auto"
+                    />
+                    <div className="pt-1 text-sm leading-relaxed">
+                      <p className="font-bold text-gray-900 print:text-black">
+                        Arrowhead Alarm Products
                       </p>
+                      <p className="text-gray-600 print:text-black">1A Emirali Road</p>
+                      <p className="text-gray-600 print:text-black">Silverdale 0932, Auckland</p>
+                      <p className="text-gray-600 print:text-black">New Zealand</p>
                     </div>
-                  )}
+                  </div>
+                  <div className="grid flex-1 grid-cols-2 gap-x-6 pt-1">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
+                        Ship To
+                      </p>
+                      <div className="text-[10px] leading-[1.3]">
+                        {previewAddressLines.length > 0 ? (
+                          previewAddressLines.map((line, index) => (
+                            <p key={`ship-${index}`} className="text-black">
+                              {line.value}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="italic text-gray-500">No shipping details available</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
+                        Bill To
+                      </p>
+                      <div className="text-[10px] leading-[1.3]">
+                        {billToLines.length > 0 ? (
+                          billToLines.map((line, index) => (
+                            <p key={`bill-${index}`} className="text-black">
+                              {line.value}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="italic text-gray-500">Same as shipping address</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="ml-auto min-w-[20rem] max-w-[24rem]">
                   <div className="flex items-start justify-between gap-6">
                     <div className="text-center">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-sky-900 text-xs font-bold uppercase tracking-wider print:bg-slate-50 print:text-sky-950">
-                        <span className="w-1.5 h-1.5 rounded-full bg-sky-800 print:bg-sky-900" />
-                        Fulfillment Document
-                      </div>
-                      <h1 className="mt-1 text-2xl font-black tracking-tight bg-gradient-to-r from-sky-950 via-slate-700 to-sky-900 bg-clip-text text-transparent print:text-sky-950">
+                      <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-sky-950 via-slate-700 to-sky-900 bg-clip-text text-transparent print:text-sky-950">
                         Packing Slip
                       </h1>
+                      {salesOrderBarcode && (
+                        <div className="mt-1 flex justify-center">
+                          <BarcodeGraphic
+                            barcode={salesOrderBarcode}
+                            size={salesOrderBarcodeSize}
+                            image={salesOrderBarcodeImage}
+                            height={24}
+                            rectKeyPrefix="sales-order-barcode"
+                          />
+                        </div>
+                      )}
                       <div className="mt-1 flex justify-center">
                         <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-slate-50 print:border-slate-300">
                           <CalendarDaysIcon className="h-4 w-4 text-sky-800 print:text-sky-900" />
@@ -594,11 +624,6 @@ export function FulfillmentPackingSlip({
                             {orderDate}
                           </span>
                         </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
-                        {`Page 1 of ${totalSlipPages}`}
                       </div>
                     </div>
                   </div>
@@ -633,51 +658,14 @@ export function FulfillmentPackingSlip({
                   {accountNumberDetails.accountNumber}
                 </span>
               </div>
-            </div>
-          </div>
-
-          <div className="px-6 py-1 border-b border-slate-200">
-            <div className="grid md:grid-cols-2 gap-2">
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
-                  Ship To
-                </p>
-                <div className="text-[10px] leading-[1.3]">
-                  {previewAddressLines.length > 0 ? (
-                    previewAddressLines.map((line, index) => (
-                      <p key={`ship-${index}`} className="text-black">
-                        {line.value}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="italic text-gray-500">No shipping details available</p>
-                  )}
-                </div>
+                <span className="font-bold uppercase tracking-wider text-slate-500 print:text-black">
+                  Via:{' '}
+                </span>
+                <span className="font-mono font-semibold text-slate-900 print:text-black">
+                  {shippingMethodLabel}
+                </span>
               </div>
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
-                  Bill To
-                </p>
-                <div className="text-[10px] leading-[1.3]">
-                  {billToLines.length > 0 ? (
-                    billToLines.map((line, index) => (
-                      <p key={`bill-${index}`} className="text-black">
-                        {line.value}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="italic text-gray-500">Same as shipping address</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="mt-0.5 flex items-center gap-1.5">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 print:text-black">
-                Via:
-              </span>
-              <span className="text-[10px] font-semibold text-slate-800 print:text-black">
-                {shippingMethodLabel}
-              </span>
             </div>
           </div>
 
@@ -691,13 +679,21 @@ export function FulfillmentPackingSlip({
             />
           </div>
 
-          {totalSlipPages === 1 && (
+          {totalSlipPages === 1 ? (
             <FulfillmentSlipFooter
               pickedByLabel={pickedByLabel}
               packedByLabel={packedByLabel}
               pickedAtLabel={pickedAtLabel}
               packedAtLabel={packedAtLabel}
+              pageNumber={1}
+              totalPages={totalSlipPages}
             />
+          ) : (
+            <div className="flex justify-end px-6 py-2 border-t border-slate-200 print:border-gray-400">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
+                {`Page 1 of ${totalSlipPages}`}
+              </div>
+            </div>
           )}
         </section>
 
@@ -715,37 +711,73 @@ export function FulfillmentPackingSlip({
                 />
                 <div className="px-6 py-3">
                   <div className="flex items-start justify-between gap-8">
-                    <div className="flex items-start gap-5">
-                      <img
-                        src={fulfillmentSlipLogoUrl}
-                        alt="Arrowhead Alarm Products"
-                        className="fulfillment-slip-brand-logo w-24 h-auto"
-                      />
-                      <div className="pt-1 text-sm leading-relaxed">
-                        <p className="font-semibold text-gray-900 print:text-black">
-                          Arrowhead Alarm Products
-                        </p>
-                        <p className="text-gray-800 print:text-black">1A Emirali Road</p>
-                        <p className="text-gray-800 print:text-black">Silverdale 0932, Auckland</p>
-                        <p className="text-gray-800 print:text-black">New Zealand</p>
+                    <div className="flex flex-1 items-start gap-8">
+                      <div className="flex items-start gap-5 shrink-0">
+                        <img
+                          src={fulfillmentSlipLogoUrl}
+                          alt="Arrowhead Alarm Products"
+                          className="fulfillment-slip-brand-logo w-24 h-auto"
+                        />
+                        <div className="pt-1 text-sm leading-relaxed">
+                          <p className="font-semibold text-gray-900 print:text-black">
+                            Arrowhead Alarm Products
+                          </p>
+                          <p className="text-gray-800 print:text-black">1A Emirali Road</p>
+                          <p className="text-gray-800 print:text-black">
+                            Silverdale 0932, Auckland
+                          </p>
+                          <p className="text-gray-800 print:text-black">New Zealand</p>
+                        </div>
+                      </div>
+                      <div className="grid flex-1 grid-cols-2 gap-x-6 pt-1">
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
+                            Ship To
+                          </p>
+                          <div className="text-[10px] leading-[1.3]">
+                            {previewAddressLines.length > 0 ? (
+                              previewAddressLines.map((line, index) => (
+                                <p
+                                  key={`continuation-ship-${pageNumber}-${index}`}
+                                  className="text-black"
+                                >
+                                  {line.value}
+                                </p>
+                              ))
+                            ) : (
+                              <p className="italic text-gray-500">No shipping details available</p>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
+                            Bill To
+                          </p>
+                          <div className="text-[10px] leading-[1.3]">
+                            {billToLines.length > 0 ? (
+                              billToLines.map((line, index) => (
+                                <p
+                                  key={`continuation-bill-${pageNumber}-${index}`}
+                                  className="text-black"
+                                >
+                                  {line.value}
+                                </p>
+                              ))
+                            ) : (
+                              <p className="italic text-gray-500">Same as shipping address</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div className="ml-auto min-w-[20rem] max-w-[24rem]">
                       <div className="flex items-start justify-between gap-6">
                         <div className="text-center">
-                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-900 print:text-sky-950">
-                            Fulfillment Document
-                          </p>
-                          <h1 className="mt-1 text-2xl font-black tracking-tight text-sky-950 print:text-sky-950">
+                          <h1 className="text-2xl font-black tracking-tight text-sky-950 print:text-sky-950">
                             Packing Slip
                           </h1>
                           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 print:text-slate-700">
                             Continued
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 print:text-black">
-                            {`Page ${pageNumber} of ${totalSlipPages}`}
                           </p>
                         </div>
                       </div>
@@ -762,13 +794,21 @@ export function FulfillmentPackingSlip({
                   pageNumber={pageNumber}
                 />
               </div>
-              {isLastPage && (
+              {isLastPage ? (
                 <FulfillmentSlipFooter
                   pickedByLabel={pickedByLabel}
                   packedByLabel={packedByLabel}
                   pickedAtLabel={pickedAtLabel}
                   packedAtLabel={packedAtLabel}
+                  pageNumber={pageNumber}
+                  totalPages={totalSlipPages}
                 />
+              ) : (
+                <div className="flex justify-end px-6 py-2 border-t border-slate-200 print:border-gray-400">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
+                    {`Page ${pageNumber} of ${totalSlipPages}`}
+                  </div>
+                </div>
               )}
             </section>
           );
@@ -783,11 +823,15 @@ function FulfillmentSlipFooter({
   packedByLabel,
   pickedAtLabel,
   packedAtLabel,
+  pageNumber,
+  totalPages,
 }: {
   pickedByLabel: string;
   packedByLabel?: string | null;
   pickedAtLabel?: string | null;
   packedAtLabel?: string | null;
+  pageNumber: number;
+  totalPages: number;
 }) {
   return (
     <>
@@ -821,10 +865,13 @@ function FulfillmentSlipFooter({
           </div>
         </div>
       </div>
-      <div className="px-6 py-2 border-t border-slate-200 print:border-gray-400">
-        <p className="text-center text-xs text-slate-600 print:text-black">
-          This document was generated electronically from OpsUI Warehouse Management System
+      <div className="flex items-center justify-between px-6 py-2 border-t border-slate-200 print:border-gray-400">
+        <p className="text-xs text-slate-600 print:text-black">
+          Phone: 09 414 0085 &nbsp;|&nbsp; Email: sales@aap.co.nz
         </p>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
+          {`Page ${pageNumber} of ${totalPages}`}
+        </div>
       </div>
     </>
   );
