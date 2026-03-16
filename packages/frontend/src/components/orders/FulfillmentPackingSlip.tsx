@@ -60,7 +60,7 @@ const code39Patterns: Record<string, string> = {
 };
 
 export const FULFILLMENT_SLIP_PRINT_STYLES = `
-  @page { size: A4 landscape; margin: 10mm; }
+  @page { size: A4 landscape; margin: 10mm; duplex: duplex-long-edge; }
   html, body {
     margin: 0 !important;
     padding: 0 !important;
@@ -124,7 +124,7 @@ export const FULFILLMENT_SLIP_SCREEN_STYLES = `
     border: 1px solid #cbd5e1;
   }
   @media print {
-    @page { size: A4 landscape; margin: 10mm; }
+    @page { size: A4 landscape; margin: 10mm; duplex: duplex-long-edge; }
     html, body {
       background: white !important;
       -webkit-print-color-adjust: exact !important;
@@ -606,24 +606,31 @@ export function FulfillmentPackingSlip({
                       <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-sky-950 via-slate-700 to-sky-900 bg-clip-text text-transparent print:text-sky-950">
                         Packing Slip
                       </h1>
-                      {salesOrderBarcode && (
-                        <div className="mt-1 flex justify-center">
-                          <BarcodeGraphic
-                            barcode={salesOrderBarcode}
-                            size={salesOrderBarcodeSize}
-                            image={salesOrderBarcodeImage}
-                            height={24}
-                            rectKeyPrefix="sales-order-barcode"
-                          />
-                        </div>
-                      )}
+                    </div>
+                    <div className="shrink-0 pt-1">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
+                        {`Page 1 of ${totalSlipPages}`}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    {salesOrderBarcode && (
                       <div className="mt-1 flex justify-center">
-                        <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-slate-50 print:border-slate-300">
-                          <CalendarDaysIcon className="h-4 w-4 text-sky-800 print:text-sky-900" />
-                          <span className="text-sm font-semibold text-sky-950 print:text-sky-950">
-                            {orderDate}
-                          </span>
-                        </div>
+                        <BarcodeGraphic
+                          barcode={salesOrderBarcode}
+                          size={salesOrderBarcodeSize}
+                          image={salesOrderBarcodeImage}
+                          height={24}
+                          rectKeyPrefix="sales-order-barcode"
+                        />
+                      </div>
+                    )}
+                    <div className="mt-1 flex justify-center">
+                      <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-slate-50 print:border-slate-300">
+                        <CalendarDaysIcon className="h-4 w-4 text-sky-800 print:text-sky-900" />
+                        <span className="text-sm font-semibold text-sky-950 print:text-sky-950">
+                          {orderDate}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -660,7 +667,7 @@ export function FulfillmentPackingSlip({
               </div>
               <div>
                 <span className="font-bold uppercase tracking-wider text-slate-500 print:text-black">
-                  Via:{' '}
+                  Ship Method:{' '}
                 </span>
                 <span className="font-mono font-semibold text-slate-900 print:text-black">
                   {shippingMethodLabel}
@@ -679,21 +686,13 @@ export function FulfillmentPackingSlip({
             />
           </div>
 
-          {totalSlipPages === 1 ? (
+          {totalSlipPages === 1 && (
             <FulfillmentSlipFooter
               pickedByLabel={pickedByLabel}
               packedByLabel={packedByLabel}
               pickedAtLabel={pickedAtLabel}
               packedAtLabel={packedAtLabel}
-              pageNumber={1}
-              totalPages={totalSlipPages}
             />
-          ) : (
-            <div className="flex justify-end px-6 py-2 border-t border-slate-200 print:border-gray-400">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
-                {`Page 1 of ${totalSlipPages}`}
-              </div>
-            </div>
           )}
         </section>
 
@@ -780,6 +779,11 @@ export function FulfillmentPackingSlip({
                             Continued
                           </p>
                         </div>
+                        <div className="shrink-0 pt-1">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
+                            {`Page ${pageNumber} of ${totalSlipPages}`}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -794,21 +798,13 @@ export function FulfillmentPackingSlip({
                   pageNumber={pageNumber}
                 />
               </div>
-              {isLastPage ? (
+              {isLastPage && (
                 <FulfillmentSlipFooter
                   pickedByLabel={pickedByLabel}
                   packedByLabel={packedByLabel}
                   pickedAtLabel={pickedAtLabel}
                   packedAtLabel={packedAtLabel}
-                  pageNumber={pageNumber}
-                  totalPages={totalSlipPages}
                 />
-              ) : (
-                <div className="flex justify-end px-6 py-2 border-t border-slate-200 print:border-gray-400">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
-                    {`Page ${pageNumber} of ${totalSlipPages}`}
-                  </div>
-                </div>
               )}
             </section>
           );
@@ -823,15 +819,11 @@ function FulfillmentSlipFooter({
   packedByLabel,
   pickedAtLabel,
   packedAtLabel,
-  pageNumber,
-  totalPages,
 }: {
   pickedByLabel: string;
   packedByLabel?: string | null;
   pickedAtLabel?: string | null;
   packedAtLabel?: string | null;
-  pageNumber: number;
-  totalPages: number;
 }) {
   return (
     <>
@@ -865,13 +857,10 @@ function FulfillmentSlipFooter({
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-between px-6 py-2 border-t border-slate-200 print:border-gray-400">
-        <p className="text-xs text-slate-600 print:text-black">
+      <div className="px-6 py-2 border-t border-slate-200 print:border-gray-400">
+        <p className="text-center text-xs text-slate-600 print:text-black">
           Phone: 09 414 0085 &nbsp;|&nbsp; Email: sales@aap.co.nz
         </p>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
-          {`Page ${pageNumber} of ${totalPages}`}
-        </div>
       </div>
     </>
   );
