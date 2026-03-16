@@ -886,6 +886,37 @@ export async function printFulfillmentSlipElement(
     throw new Error('Packing slip preview is not ready yet');
   }
 
+  // Convert all images to data URLs before writing to the iframe.
+  // This avoids the iframe re-fetching images over the network (which is
+  // slow and can fail in a print context), and guarantees images appear in print.
+  const imgElements = Array.from(slipElement.querySelectorAll('img')) as HTMLImageElement[];
+  const dataUrlEntries = await Promise.all(
+    imgElements.map(async img => {
+      const src = img.src;
+      if (!src || src.startsWith('data:')) return [src, src] as const;
+      try {
+        const resp = await fetch(src);
+        const blob = await resp.blob();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(src);
+          reader.readAsDataURL(blob);
+        });
+        return [src, dataUrl] as const;
+      } catch {
+        return [src, src] as const;
+      }
+    })
+  );
+  const dataUrlMap = new Map(dataUrlEntries);
+
+  const clone = slipElement.cloneNode(true) as HTMLElement;
+  (Array.from(clone.querySelectorAll('img')) as HTMLImageElement[]).forEach(img => {
+    const dataUrl = dataUrlMap.get(img.src);
+    if (dataUrl && dataUrl !== img.src) img.src = dataUrl;
+  });
+
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed';
   iframe.style.right = '0';
@@ -902,7 +933,6 @@ export async function printFulfillmentSlipElement(
       throw new Error('Unable to open print document');
     }
 
-    // Extract already-loaded CSS inline to avoid re-fetching external stylesheets
     const inlinedCss = Array.from(document.styleSheets)
       .flatMap(sheet => {
         try {
@@ -924,38 +954,19 @@ export async function printFulfillmentSlipElement(
           <style>${FULFILLMENT_SLIP_PRINT_STYLES}</style>
         </head>
         <body class="fulfillment-slip-print-preview">
-          ${slipElement.outerHTML}
+          ${clone.outerHTML}
         </body>
       </html>
     `);
     doc.close();
 
+    // All images are already data URLs — print as soon as the iframe is ready.
     iframe.onload = () => {
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      const images = Array.from(iframeDoc?.querySelectorAll('img') ?? []) as HTMLImageElement[];
-      const pending = images.filter(img => !img.complete);
-
-      const doPrint = () => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        window.setTimeout(() => {
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        }, 3000);
-      };
-
-      if (pending.length === 0) {
-        doPrint();
-      } else {
-        let remaining = pending.length;
-        const onSettle = () => {
-          remaining -= 1;
-          if (remaining === 0) doPrint();
-        };
-        pending.forEach(img => {
-          img.onload = onSettle;
-          img.onerror = onSettle;
-        });
-      }
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      window.setTimeout(() => {
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 3000);
     };
   } catch (error) {
     if (iframe.parentNode) {
